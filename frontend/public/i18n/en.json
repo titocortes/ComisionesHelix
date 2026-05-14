@@ -1,0 +1,82 @@
+{
+  "brand": {
+    "name": "ALLIANT",
+    "division": "FEDERATION",
+    "system": "Commission Administration System",
+    "description": "Reliable, transparent and efficient commission management for your agent team across the federation.",
+    "feature_security": "Secure and protected access",
+    "feature_reports": "Real-time reports",
+    "feature_agents": "Multi-agent management"
+  },
+  "login": {
+    "title": "Sign In",
+    "subtitle": "Enter your credentials to access the system",
+    "email_label": "Email Address",
+    "email_placeholder": "user@alliantfed.us",
+    "password_label": "Password",
+    "password_placeholder": "Enter your password",
+    "submit": "Sign In to System",
+    "footer": "© {{year}} Alliant Federation. All rights reserved.",
+    "errors": {
+      "email_required": "Email is required.",
+      "email_invalid": "Please enter a valid email address.",
+      "password_required": "Password is required.",
+      "invalid_credentials": "Invalid credentials. Please verify your email and password.",
+      "server_error": "Unable to connect to the server. Please try again."
+    }
+  },
+  "nav": {
+    "dashboard":    "Dashboard",
+    "clients":      "Clients",
+    "products":     "Products",
+    "transactions": "Transactions",
+    "payments":     "Payments",
+    "commissions":  "Commissions",
+    "catalogs":     "Catalogs",
+    "logout":       "Sign Out"
+  },
+  "dashboard": {
+    "coming_soon": "Dashboard content coming soon."
+  },
+  "clients": {
+    "title": "Clients",
+    "subtitle": "Manage your client portfolio",
+    "new_client": "New Client",
+    "search_placeholder": "Search by name, email, or ID...",
+    "search": "Search",
+    "col_name": "Name",
+    "col_email": "Email",
+    "col_id": "ID Number",
+    "col_mobile": "Phone",
+    "col_status": "Status",
+    "col_source": "Source",
+    "col_actions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "active": "Active",
+    "inactive": "Inactive",
+    "no_results": "No clients found.",
+    "new_title": "New Client",
+    "edit_title": "Edit Client",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "email": "Email Address",
+    "id_type": "ID Type",
+    "id_number": "ID Number",
+    "dob": "Date of Birth",
+    "gender": "Gender",
+    "citizenship": "Citizenship Country",
+    "residence": "Residence Country",
+    "mobile": "Mobile Phone",
+    "usa_mobile": "USA Mobile",
+    "visa_type": "Visa Type",
+    "source": "Source",
+    "greeting_name": "Greeting Name",
+    "select": "Select...",
+    "select_country": "Select country...",
+    "required": "This field is required.",
+    "email_invalid": "Enter a valid email address.",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

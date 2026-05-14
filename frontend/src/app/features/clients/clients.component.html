@@ -1,0 +1,89 @@
+<div class="clients-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <h2>{{ 'clients.title' | translate }}</h2>
+      <span class="subtitle">{{ 'clients.subtitle' | translate }}</span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <p-iconfield>
+      <p-inputicon class="pi pi-search" />
+      <input
+        pInputText
+        type="text"
+        [(ngModel)]="search"
+        [placeholder]="'clients.search_placeholder' | translate"
+        (keyup.enter)="onSearch()"
+      />
+    </p-iconfield>
+    <p-button
+      icon="pi pi-search"
+      [label]="'clients.search' | translate"
+      severity="secondary"
+      (onClick)="onSearch()"
+    />
+  </div>
+
+  <!-- Table -->
+  <p-table
+    [value]="clients"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="limit"
+    [totalRecords]="total"
+    [loading]="loading"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    [sortField]="sortField"
+    [sortOrder]="1"
+    (onPage)="onPageChange($event)"
+    (onSort)="onSort($event)"
+    class="p-datatable-sm p-datatable-gridlines"
+    [tableStyle]="{ 'min-width': '60rem' }"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="lastName" style="width:22%">
+          {{ 'clients.col_name' | translate }} <p-sortIcon field="lastName" />
+        </th>
+        <th pSortableColumn="email" style="width:24%">
+          {{ 'clients.col_email' | translate }} <p-sortIcon field="email" />
+        </th>
+        <th style="width:14%">{{ 'clients.col_id' | translate }}</th>
+        <th style="width:14%">{{ 'clients.col_mobile' | translate }}</th>
+        <th style="width:12%">{{ 'clients.col_source' | translate }}</th>
+        <th pSortableColumn="activo" style="width:8%">
+          {{ 'clients.col_status' | translate }} <p-sortIcon field="activo" />
+        </th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-client>
+      <tr>
+        <td>{{ client.lastName }}, {{ client.firstName }}</td>
+        <td>{{ client.email }}</td>
+        <td>{{ client.idNumber }}</td>
+        <td>{{ client.mobile || client.usa_mobile || '—' }}</td>
+        <td>{{ client.source || '—' }}</td>
+        <td>
+          <p-tag
+            [value]="(client.activo ? 'clients.active' : 'clients.inactive') | translate"
+            [severity]="getStatusSeverity(client.activo)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="text-center p-4">
+          {{ 'clients.no_results' | translate }}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+</div>

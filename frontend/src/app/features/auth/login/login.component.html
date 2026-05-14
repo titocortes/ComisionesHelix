@@ -1,0 +1,115 @@
+<div class="login-page">
+
+  <!-- Left panel: branding -->
+  <div class="branding-panel">
+    <div class="branding-content">
+
+      <div class="logo-area">
+        <img src="img/Logo.png" alt="Alliant Federation" class="brand-logo">
+      </div>
+
+      <h2 class="brand-tagline">
+        {{ 'brand.system' | translate }}
+      </h2>
+
+      <p class="brand-description">
+        {{ 'brand.description' | translate }}
+      </p>
+
+      <div class="brand-divider"></div>
+
+      <div class="brand-features">
+        <div class="feature-item">
+          <i class="pi pi-shield"></i>
+          <span>{{ 'brand.feature_security' | translate }}</span>
+        </div>
+        <div class="feature-item">
+          <i class="pi pi-chart-bar"></i>
+          <span>{{ 'brand.feature_reports' | translate }}</span>
+        </div>
+        <div class="feature-item">
+          <i class="pi pi-users"></i>
+          <span>{{ 'brand.feature_agents' | translate }}</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Right panel: form -->
+  <div class="form-panel">
+    <div class="form-container">
+
+      <div class="form-header">
+        <div class="form-logo-mobile">
+          <img src="img/Logo.png" alt="Alliant Federation" class="brand-logo-mobile">
+        </div>
+        <h1>{{ 'login.title' | translate }}</h1>
+        <p>{{ 'login.subtitle' | translate }}</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" autocomplete="on">
+
+        <div class="field">
+          <label for="email">{{ 'login.email_label' | translate }}</label>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            formControlName="email"
+            [placeholder]="'login.email_placeholder' | translate"
+            autocomplete="email"
+            [ngClass]="{ 'input-error': email?.invalid && email?.touched }"
+          />
+          @if (email?.invalid && email?.touched) {
+            <small class="error-text">
+              @if (email?.errors?.['required']) { {{ 'login.errors.email_required' | translate }} }
+              @else if (email?.errors?.['email']) { {{ 'login.errors.email_invalid' | translate }} }
+            </small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="password">{{ 'login.password_label' | translate }}</label>
+          <p-password
+            inputId="password"
+            formControlName="password"
+            [feedback]="false"
+            [toggleMask]="true"
+            [placeholder]="'login.password_placeholder' | translate"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            autocomplete="current-password"
+            [ngClass]="{ 'input-error': password?.invalid && password?.touched }"
+          />
+          @if (password?.invalid && password?.touched) {
+            <small class="error-text">{{ 'login.errors.password_required' | translate }}</small>
+          }
+        </div>
+
+        @if (errorKey) {
+          <p-message
+            severity="error"
+            [text]="errorKey | translate"
+            styleClass="w-full"
+          />
+        }
+
+        <p-button
+          [label]="'login.submit' | translate"
+          icon="pi pi-sign-in"
+          [loading]="loading"
+          styleClass="w-full login-btn"
+          (onClick)="onSubmit()"
+        />
+
+      </form>
+
+      <div class="form-footer">
+        <span>{{ 'login.footer' | translate: { year: currentYear } }}</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>

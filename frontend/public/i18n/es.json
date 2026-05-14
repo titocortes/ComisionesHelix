@@ -1,0 +1,82 @@
+{
+  "brand": {
+    "name": "ALLIANT",
+    "division": "FEDERATION",
+    "system": "Sistema de Administración de Comisiones",
+    "description": "Gestión confiable, transparente y eficiente de comisiones para su equipo de agentes en toda la federación.",
+    "feature_security": "Acceso seguro y protegido",
+    "feature_reports": "Reportes en tiempo real",
+    "feature_agents": "Gestión multiagente"
+  },
+  "login": {
+    "title": "Iniciar Sesión",
+    "subtitle": "Ingrese sus credenciales para acceder al sistema",
+    "email_label": "Correo Electrónico",
+    "email_placeholder": "usuario@alliantfed.us",
+    "password_label": "Contraseña",
+    "password_placeholder": "Ingresa tu contraseña",
+    "submit": "Ingresar al Sistema",
+    "footer": "© {{year}} Alliant Federation. Todos los derechos reservados.",
+    "errors": {
+      "email_required": "El correo es requerido.",
+      "email_invalid": "Ingrese un correo electrónico válido.",
+      "password_required": "La contraseña es requerida.",
+      "invalid_credentials": "Credenciales incorrectas. Verifica tu correo y contraseña.",
+      "server_error": "Error al conectar con el servidor. Intenta de nuevo."
+    }
+  },
+  "nav": {
+    "dashboard":    "Panel Principal",
+    "clients":      "Clientes",
+    "products":     "Productos",
+    "transactions": "Transacciones",
+    "payments":     "Pagos",
+    "commissions":  "Comisiones",
+    "catalogs":     "Catálogos",
+    "logout":       "Cerrar Sesión"
+  },
+  "dashboard": {
+    "coming_soon": "Contenido del panel en construcción."
+  },
+  "clients": {
+    "title": "Clientes",
+    "subtitle": "Administra tu cartera de clientes",
+    "new_client": "Nuevo Cliente",
+    "search_placeholder": "Buscar por nombre, correo o ID...",
+    "search": "Buscar",
+    "col_name": "Nombre",
+    "col_email": "Correo",
+    "col_id": "Número de ID",
+    "col_mobile": "Teléfono",
+    "col_status": "Estado",
+    "col_source": "Origen",
+    "col_actions": "Acciones",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "no_results": "No se encontraron clientes.",
+    "new_title": "Nuevo Cliente",
+    "edit_title": "Editar Cliente",
+    "first_name": "Nombre",
+    "last_name": "Apellido",
+    "email": "Correo Electrónico",
+    "id_type": "Tipo de ID",
+    "id_number": "Número de ID",
+    "dob": "Fecha de Nacimiento",
+    "gender": "Género",
+    "citizenship": "País de Ciudadanía",
+    "residence": "País de Residencia",
+    "mobile": "Teléfono Móvil",
+    "usa_mobile": "Móvil USA",
+    "visa_type": "Tipo de Visa",
+    "source": "Origen",
+    "greeting_name": "Nombre de Saludo",
+    "select": "Seleccionar...",
+    "select_country": "Seleccionar país...",
+    "required": "Este campo es requerido.",
+    "email_invalid": "Ingresa un correo electrónico válido.",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  }
+}

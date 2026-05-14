@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"c:\\\\Proyectos\\\\HelixComisiones\\\\frontend\" -Recurse -File | Where-Object { $_.Extension -in \".ts\",\".scss\",\".html\" } | Select-Object FullName)",
+      "PowerShell(Get-ChildItem \"c:\\\\Proyectos\\\\HelixComisiones\\\\frontend\\\\src\" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object -ExpandProperty FullName)",
+      "PowerShell(Head -30)",
+      "PowerShell(cmd /c \"dir /s /b C:\\\\Proyectos\\\\HelixComisiones\\\\backend\\\\generated 2>&1 | head -20\")",
+      "PowerShell(cmd /c \"dir /s /b C:\\\\Proyectos\\\\HelixComisiones\\\\backend\\\\generated\" 2>&1)",
+      "PowerShell(Set-Location \"c:\\\\Proyectos\\\\HelixComisiones\\\\backend\"; npx prisma studio 2>&1 &)",
+      "Bash(Select-String \"date|calendar|pick\" -i)",
+      "PowerShell(Get-ChildItem \"c:\\\\Proyectos\\\\HelixComisiones\\\\frontend\\\\node_modules\\\\primeng\" -Directory | Where-Object { $_.Name -match \"date|calendar|pick\" } | Select-Object Name)",
+      "PowerShell(Get-ChildItem \"c:\\\\Proyectos\\\\HelixComisiones\\\\frontend\\\\node_modules\\\\primeng\\\\fesm2022\" | Where-Object { $_.Name -match \"date|calendar|pick\" } | Select-Object Name)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}, indent=2\\)\\)\")",
+      "PowerShell(Select-String -Path \"c:\\\\Proyectos\\\\HelixComisiones\\\\backend\\\\node_modules\\\\@prisma\\\\adapter-mariadb\\\\dist\\\\index.mjs\" -Pattern \"createPool|mariadb|mysql|scheme|protocol\" | Select-Object -First 20 | ForEach-Object { $_.Line })",
+      "PowerShell(Select-String -Path \"c:\\\\Proyectos\\\\HelixComisiones\\\\backend\\\\node_modules\\\\@prisma\\\\adapter-mariadb\\\\dist\\\\index.mjs\" -Pattern \"PrismaMariaDb\\\\b\" | Select-Object -First 10 | ForEach-Object { $_.Line })",
+      "PowerShell(Select-String -Path \"c:\\\\Proyectos\\\\HelixComisiones\\\\backend\\\\node_modules\\\\@prisma\\\\adapter-mariadb\\\\dist\\\\index.mjs\" -Pattern \"AdapterFactory|Factory\" | Select-Object -First 20 | ForEach-Object { $_.Line })",
+      "PowerShell(Set-Location \"c:\\\\Proyectos\\\\HelixComisiones\\\\frontend\"; npx ng build --configuration development 2>&1 | Select-String \"error|Error|✔|Application bundle\" | Select-Object -First 20 | ForEach-Object { $_.Line })",
+      "Bash(Get-ChildItem -Path \"c:\\\\Proyectos\\\\HelixComisiones\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(xargs grep -l \"environment\\\\|API_URL\\\\|apiUrl\")",
+      "Read(//c/Users/Tito/.claude/projects/c--Proyectos-HelixComisiones/memory/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Tito\\.claude\\projects\\c--Proyectos-HelixComisiones\\memory"
+    ]
+  }
+}

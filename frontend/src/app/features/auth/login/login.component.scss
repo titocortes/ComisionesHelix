@@ -1,0 +1,323 @@
+$navy-dark:   #0A2342;
+$navy-mid:    #1B3A6B;
+$navy-light:  #2E5FA3;
+$red:         #BF0A30;
+$gold:        #C9A84C;
+$white:       #FFFFFF;
+$gray-light:  #F4F6FA;
+$gray-mid:    #6B7280;
+$gray-border: #E2E8F0;
+$text-dark:   #1A202C;
+$error-red:   #DC2626;
+
+// ─── Layout ────────────────────────────────────────────────────────────────
+
+.login-page {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+// ─── Panel izquierdo ───────────────────────────────────────────────────────
+
+.branding-panel {
+  flex: 0 0 58%;
+  background: linear-gradient(145deg, $navy-dark 0%, $navy-mid 55%, $navy-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 3.5rem;
+  position: relative;
+  overflow: hidden;
+
+  // Patrón de puntos sutil (estrellas)
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
+    background-size: 38px 38px;
+    pointer-events: none;
+  }
+
+  // Franja roja-dorada al borde derecho
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, $red 0%, $gold 50%, $red 100%);
+  }
+}
+
+.branding-content {
+  position: relative;
+  max-width: 460px;
+  color: $white;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2.75rem;
+}
+
+.brand-logo {
+  max-height: 80px;
+  max-width: 240px;
+  width: auto;
+  object-fit: contain;
+}
+
+.brand-tagline {
+  font-size: 1.7rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0 0 1rem;
+  color: $white;
+}
+
+.brand-description {
+  font-size: 0.95rem;
+  color: rgba($white, 0.68);
+  line-height: 1.65;
+  margin: 0 0 2rem;
+}
+
+.brand-divider {
+  width: 56px;
+  height: 3px;
+  background: linear-gradient(to right, $red, $gold);
+  border-radius: 2px;
+  margin-bottom: 2rem;
+}
+
+.brand-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.9rem;
+  color: rgba($white, 0.82);
+
+  i {
+    font-size: 1rem;
+    color: $gold;
+    width: 20px;
+    text-align: center;
+  }
+}
+
+// ─── Panel derecho ─────────────────────────────────────────────────────────
+
+.form-panel {
+  flex: 0 0 42%;
+  background: $gray-light;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 480px;
+  background: $white;
+  border-radius: 18px;
+  padding: 2.75rem 2.5rem;
+  box-shadow:
+    0 8px 32px rgba($navy-dark, 0.1),
+    0 2px 8px rgba($navy-dark, 0.06);
+}
+
+.form-logo-mobile {
+  display: none;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.brand-logo-mobile {
+  max-height: 52px;
+  max-width: 180px;
+  width: auto;
+  object-fit: contain;
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: $navy-dark;
+    margin: 0 0 0.4rem;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: $gray-mid;
+    margin: 0;
+  }
+}
+
+// ─── Formulario ────────────────────────────────────────────────────────────
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $text-dark;
+  }
+
+  input.p-inputtext {
+    width: 100%;
+    border-radius: 8px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba($navy-mid, 0.15);
+    }
+
+    &.input-error {
+      border-color: $error-red !important;
+    }
+  }
+}
+
+.error-text {
+  font-size: 0.78rem;
+  color: $error-red;
+  font-weight: 500;
+}
+
+// ─── PrimeNG overrides ─────────────────────────────────────────────────────
+
+:host ::ng-deep {
+
+  .p-password {
+    width: 100%;
+
+    input.p-inputtext {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    &.input-error input {
+      border-color: $error-red !important;
+    }
+  }
+
+  .login-btn.p-button {
+    background: $navy-dark;
+    border-color: $navy-dark;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    margin-top: 0.25rem;
+    transition: background 0.2s ease, transform 0.1s ease;
+    letter-spacing: 0.01em;
+
+    &:hover:not(:disabled) {
+      background: $navy-mid;
+      border-color: $navy-mid;
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.99);
+    }
+  }
+
+  .p-message {
+    border-radius: 8px;
+    font-size: 0.875rem;
+  }
+}
+
+// ─── Footer ────────────────────────────────────────────────────────────────
+
+.form-footer {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid $gray-border;
+  text-align: center;
+
+  span {
+    font-size: 0.72rem;
+    color: $gray-mid;
+    letter-spacing: 0.01em;
+  }
+}
+
+// ─── Responsive ────────────────────────────────────────────────────────────
+
+@media (max-width: 900px) {
+  .branding-panel {
+    padding: 2rem;
+
+    .brand-description,
+    .brand-features {
+      display: none;
+    }
+
+    .brand-tagline {
+      font-size: 1.35rem;
+    }
+
+    &::after {
+      width: 0;
+    }
+  }
+}
+
+@media (max-width: 700px) {
+  .login-page {
+    flex-direction: column;
+  }
+
+  .branding-panel {
+    min-height: 180px;
+    flex: none;
+    padding: 1.75rem;
+
+    &::before,
+    &::after { display: none; }
+
+    .brand-tagline { display: none; }
+  }
+
+  .form-panel {
+    flex: none;
+    width: 100%;
+    padding: 1.5rem;
+    background: $white;
+  }
+
+  .form-container {
+    box-shadow: none;
+    padding: 1.5rem 1rem;
+  }
+
+  .form-logo-mobile {
+    display: flex;
+  }
+}
