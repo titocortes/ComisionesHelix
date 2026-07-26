@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { noAuthGuard } from './core/guards/no-auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -14,6 +15,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       {
+        path: 'commissions',
+        loadComponent: () => import('./features/commissions/commission-review.component').then(m => m.CommissionReviewComponent)
+      },
+      {
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
@@ -22,8 +27,28 @@ export const routes: Routes = [
         loadComponent: () => import('./features/clients/clients.component').then(m => m.ClientsComponent)
       },
       {
+        path: 'products',
+        loadComponent: () => import('./features/products/products.component').then(m => m.ProductsComponent),
+        canActivate: [adminGuard]
+      },
+      {
+        path: 'payments',
+        loadComponent: () => import('./features/payments/payment-tracking.component').then(m => m.PaymentTrackingComponent),
+        canActivate: [adminGuard]
+      },
+      {
+        path: 'beneficiaries',
+        loadComponent: () => import('./features/beneficiaries/beneficiaries.component').then(m => m.BeneficiariesComponent),
+        canActivate: [adminGuard]
+      },
+      {
+        path: 'admin/ingestion',
+        loadComponent: () => import('./features/admin/ingestion-trigger/ingestion-trigger.component').then(m => m.IngestionTriggerComponent),
+        canActivate: [adminGuard]
+      },
+      {
         path: '',
-        redirectTo: 'dashboard',
+        redirectTo: 'commissions',
         pathMatch: 'full'
       }
     ]

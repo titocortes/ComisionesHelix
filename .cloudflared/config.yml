@@ -1,0 +1,7 @@
+tunnel: helix-dev
+credentials-file: C:\Users\Tito\.cloudflared\74e79b0c-ed6f-4fad-8742-5a7d3120f238.json
+
+ingress:
+  - hostname: developer.alliantfed.us
+    service: http://localhost:3001
+  - service: http_status:404

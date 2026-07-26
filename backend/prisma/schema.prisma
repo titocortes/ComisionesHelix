@@ -20,24 +20,27 @@ model UserRole {
 }
 
 model User {
-  idUser              Int           @id @default(autoincrement())
-  firstName           String        @db.VarChar(100)
-  lastName            String        @db.VarChar(100)
-  userEmail           String        @unique @db.VarChar(191)
-  password            String        @db.VarChar(255)
-  userCode            String?       @db.VarChar(50)
+  idUser              Int                      @id @default(autoincrement())
+  firstName           String                   @db.VarChar(100)
+  lastName            String                   @db.VarChar(100)
+  userEmail           String                   @unique @db.VarChar(191)
+  password            String                   @db.VarChar(255)
+  userCode            String?                  @db.VarChar(50)
+  helixUserId         Int?                     @unique
   securityLevel       Int
-  active              Boolean       @default(false)
-  hashKeyConfirmation String?       @db.VarChar(255)
+  active              Boolean                  @default(false)
+  hashKeyConfirmation String?                  @db.VarChar(255)
   idUserRole          Int
   idAffiliate         Int?
   idUserRegion        Int?
-  userRole            UserRole      @relation(fields: [idUserRole], references: [idUserRole])
-  affiliate           Affiliate?    @relation(fields: [idAffiliate], references: [idAffiliate])
-  region              Region?       @relation(fields: [idUserRegion], references: [idRegion])
+  userRole            UserRole                 @relation(fields: [idUserRole], references: [idUserRole])
+  affiliate           Affiliate?               @relation(fields: [idAffiliate], references: [idAffiliate])
+  region              Region?                  @relation(fields: [idUserRegion], references: [idRegion])
   refreshTokens       RefreshToken[]
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  beneficiary         Beneficiary?
+  stateHistoryChanges CommissionStateHistory[]
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
 
   @@map("Users")
 }
@@ -57,27 +60,29 @@ model RefreshToken {
 // ─── Organizations ───────────────────────────────────────────────────────────
 
 model Agency {
-  idAgency   Int         @id @default(autoincrement())
-  agencyName String      @db.VarChar(150)
-  active     Boolean     @default(true)
-  affiliates Affiliate[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  idAgency      Int         @id @default(autoincrement())
+  helixAgencyId Int?        @unique
+  agencyName    String      @db.VarChar(150)
+  active        Boolean     @default(true)
+  affiliates    Affiliate[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@map("agency")
 }
 
 model Affiliate {
-  idAffiliate   Int                @id @default(autoincrement())
-  affiliateName String             @db.VarChar(150)
-  affiliateCode String?            @db.VarChar(50)
-  idAgency      Int
-  active        Boolean            @default(true)
-  agency        Agency             @relation(fields: [idAgency], references: [idAgency])
-  users         User[]
-  commRecords   CommissionRecord[]
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  idAffiliate      Int       @id @default(autoincrement())
+  helixAffiliateId Int?      @unique
+  affiliateName    String    @db.VarChar(150)
+  affiliateCode    String?   @db.VarChar(50)
+  reportEmail      String?   @db.VarChar(191)
+  idAgency         Int
+  active           Boolean   @default(true)
+  agency           Agency    @relation(fields: [idAgency], references: [idAgency])
+  users            User[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@map("affiliate")
 }
@@ -113,36 +118,47 @@ model CatPeriodo {
   @@map("cat_periodo")
 }
 
+model CancellationReason {
+  idCancellationReason Int                @id @default(autoincrement())
+  reason               String             @db.VarChar(200)
+  active               Boolean            @default(true)
+  commissionRecords    CommissionRecord[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@map("cancellation_reasons")
+}
+
 // ─── Clients ─────────────────────────────────────────────────────────────────
 
 model Client {
-  idClient              Int               @id @default(autoincrement())
-  firstName             String            @db.VarChar(150)
-  lastName              String            @db.VarChar(150)
+  idClient              Int           @id @default(autoincrement())
+  firstName             String        @db.VarChar(150)
+  lastName              String        @db.VarChar(150)
   idType                Int
-  idNumber              String            @db.VarChar(30)
-  mobile                String?           @db.VarChar(30)
-  email                 String            @unique @db.VarChar(191)
-  nombreSaludo          String?           @db.VarChar(100)
-  fechaNacimiento       DateTime          @db.Date
-  gender                String            @db.VarChar(20)
-  visaType              String?           @db.VarChar(20)
-  activo                Boolean           @default(true)
+  idNumber              String        @db.VarChar(30)
+  mobile                String?       @db.VarChar(30)
+  email                 String        @unique @db.VarChar(191)
+  nombreSaludo          String?       @db.VarChar(100)
+  fechaNacimiento       DateTime      @db.Date
+  gender                String        @db.VarChar(20)
+  visaType              String?       @db.VarChar(20)
+  activo                Boolean       @default(true)
   assignedTo            Int?
   createdBy             Int
-  usa_mobile            String?           @db.VarChar(20)
+  usa_mobile            String?       @db.VarChar(20)
   idcountry_citizenship Int
   idcountry_residence   Int?
-  batchId               String?           @db.VarChar(100)
-  source                String?           @db.VarChar(100)
+  batchId               String?       @db.VarChar(100)
+  source                String?       @db.VarChar(100)
   AC_accountId          Int?
   deletedAt             DateTime?
-  countryCitizenship    Country           @relation("citizenship", fields: [idcountry_citizenship], references: [idCountry])
-  countryResidence      Country?          @relation("residence", fields: [idcountry_residence], references: [idCountry])
+  countryCitizenship    Country       @relation("citizenship", fields: [idcountry_citizenship], references: [idCountry])
+  countryResidence      Country?      @relation("residence", fields: [idcountry_residence], references: [idCountry])
   transactions          Transaction[]
   addresses             Address[]
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 
   @@map("client")
 }
@@ -192,6 +208,7 @@ model Provider {
 
 model Product {
   idProduct            Int                  @id @default(autoincrement())
+  helixProductId       Int?                 @unique
   productName          String               @db.VarChar(150)
   shortName            String               @db.VarChar(20)
   priceList            Decimal              @db.Decimal(10, 2)
@@ -211,7 +228,8 @@ model Product {
   planType             String?              @db.VarChar(50)
   provider             Provider             @relation(fields: [idProvider], references: [idProvider])
   catPeriodo           CatPeriodo           @relation(fields: [idCatPeriodo], references: [idCatPeriodo])
-  commissions          Commission[]
+  commissionRates      CommissionRate[]
+  dependentDiscounts   DependentDiscount[]
   productTransactions  ProductTransaction[]
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
@@ -219,32 +237,35 @@ model Product {
   @@map("products")
 }
 
-// ─── Commissions Config ──────────────────────────────────────────────────────
+// ─── Commission Configuration ────────────────────────────────────────────────
 
-model Commission {
-  idComission     Int      @id @default(autoincrement())
-  idProduct       Int
-  productType     Int      // 1: Silver; 2: Gold
-  memberAffiliate Decimal  @db.Decimal(6, 2)
-  memberAgency    Decimal  @db.Decimal(6, 2)
-  memberCmo       Decimal  @db.Decimal(6, 2)
-  dep1Affiliate   Decimal  @default(0) @db.Decimal(6, 2)
-  dep2Affiliate   Decimal  @default(0) @db.Decimal(6, 2)
-  dep3Affiliate   Decimal  @default(0) @db.Decimal(6, 2)
-  dep4Affiliate   Decimal  @default(0) @db.Decimal(6, 2)
-  dep1Agency      Decimal  @default(0) @db.Decimal(6, 2)
-  dep2Agency      Decimal  @default(0) @db.Decimal(6, 2)
-  dep3Agency      Decimal  @default(0) @db.Decimal(6, 2)
-  dep4Agency      Decimal  @default(0) @db.Decimal(6, 2)
-  dep1Cmo         Decimal  @default(0) @db.Decimal(6, 2)
-  dep2Cmo         Decimal  @default(0) @db.Decimal(6, 2)
-  dep3Cmo         Decimal  @default(0) @db.Decimal(6, 2)
-  dep4Cmo         Decimal  @default(0) @db.Decimal(6, 2)
-  product         Product  @relation(fields: [idProduct], references: [idProduct])
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model CommissionRate {
+  idCommissionRate       Int      @id @default(autoincrement())
+  idProduct              Int
+  productType            Int?
+  monthlySellerAmount    Decimal  @db.Decimal(10, 2)
+  monthlyAffiliateAmount Decimal  @db.Decimal(10, 2)
+  monthlyAgencyAmount    Decimal  @db.Decimal(10, 2)
+  active                 Boolean  @default(true)
+  product                Product  @relation(fields: [idProduct], references: [idProduct])
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
-  @@map("commission")
+  @@map("commission_rates")
+}
+
+model DependentDiscount {
+  idDependentDiscount Int      @id @default(autoincrement())
+  idProduct           Int
+  dependentNumber     Int
+  discountPercentage  Decimal  @db.Decimal(5, 2)
+  orMore              Boolean  @default(false)
+  product             Product  @relation(fields: [idProduct], references: [idProduct])
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([idProduct, dependentNumber])
+  @@map("dependent_discounts")
 }
 
 // ─── Transactions ────────────────────────────────────────────────────────────
@@ -285,19 +306,17 @@ model Transaction {
 }
 
 model ProductTransaction {
-  idProductTransaction Int                @id @default(autoincrement())
+  idProductTransaction Int         @id @default(autoincrement())
   idTransaction        Int
   idProduct            Int
-  quantity             Int                @default(1)
-  unitPrice            Decimal?           @db.Decimal(10, 2)
-  unitCost             Decimal?           @db.Decimal(10, 2)
+  quantity             Int         @default(1)
+  unitPrice            Decimal?    @db.Decimal(10, 2)
+  unitCost             Decimal?    @db.Decimal(10, 2)
   productType          Int?
-  transaction          Transaction        @relation(fields: [idTransaction], references: [idTransaction])
-  product              Product            @relation(fields: [idProduct], references: [idProduct])
-  payments             Payment[]
-  commissionRecords    CommissionRecord[]
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  transaction          Transaction @relation(fields: [idTransaction], references: [idTransaction])
+  product              Product     @relation(fields: [idProduct], references: [idProduct])
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
 
   @@map("product_transaction")
 }
@@ -306,28 +325,36 @@ model ProductTransaction {
 
 model Payment {
   idPayment                   Int                    @id @default(autoincrement())
-  idProductTransaction        Int
-  paymentOrder                Int
+  helixPaymentId              Int
+  idCronLog                   Int?
+  cronLog                     CronExecutionLog?      @relation(fields: [idCronLog], references: [idCronLog], onDelete: SetNull)
+  helixProductTransactionId   Int?
+  helixTransactionId          Int?
+  helixClientId               Int?
+  helixSellerId               Int?
+  helixProductId              Int?
+  paymentOrder                Int                    @default(1)
   idTraceAR                   String?                @db.VarChar(100)
   reference                   String?                @db.VarChar(255)
   paymentDate                 DateTime               @db.Date
+  paymentFrequency            String?                @db.VarChar(20)
   amount                      Decimal                @db.Decimal(10, 2)
   paymentStatus               Int
+  numDependents               Int                    @default(0)
   payoutDate                  DateTime?
   paidAmount                  Decimal?               @db.Decimal(10, 2)
   paymentInstrument           String?                @db.VarChar(30)
   finalFolioPaymentInstrument String?                @db.VarChar(30)
-  idCombinePayment            Int?
   coverageStartDate           DateTime?              @db.Date
   coverageEndDate             DateTime?              @db.Date
   invoiceLink                 String?                @db.VarChar(500)
-  productTransaction          ProductTransaction      @relation(fields: [idProductTransaction], references: [idProductTransaction])
   commissionRecords           CommissionRecord[]
   trackingEvents              PaymentTrackingEvent[]
-  coveragePeriod              CoveragePeriod?
+  reversal                    PaymentReversal?
   createdAt                   DateTime               @default(now())
   updatedAt                   DateTime               @updatedAt
 
+  @@index([helixPaymentId])
   @@map("payments")
 }
 
@@ -342,37 +369,190 @@ model PaymentTrackingEvent {
   @@map("payment_tracking_events")
 }
 
-model CoveragePeriod {
-  idCoveragePeriod Int      @id @default(autoincrement())
-  idPayment        Int      @unique
-  startDate        DateTime @db.Date
-  endDate          DateTime @db.Date
-  payment          Payment  @relation(fields: [idPayment], references: [idPayment])
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+// ─── Beneficiaries ───────────────────────────────────────────────────────────
 
-  @@map("coverage_period")
+model Beneficiary {
+  idBeneficiary        Int                @id @default(autoincrement())
+  name                 String             @db.VarChar(200)
+  email                String?            @db.VarChar(191)
+  beneficiaryType      String             @db.VarChar(20)
+  helixEntityId        Int
+  qboVendorId          String?            @db.VarChar(100)
+  active               Boolean            @default(true)
+  idUser               Int?               @unique
+  createdByUserId      Int
+  user                 User?              @relation(fields: [idUser], references: [idUser])
+  sellerCommissions    CommissionRecord[] @relation("SellerBeneficiary")
+  affiliateCommissions CommissionRecord[] @relation("AffiliateBeneficiary")
+  agencyCommissions    CommissionRecord[] @relation("AgencyBeneficiary")
+  paymentBatchItems    PaymentBatchItem[]
+  commissionAdjustments CommissionAdjustment[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@unique([beneficiaryType, helixEntityId])
+  @@map("beneficiaries")
 }
 
 // ─── Commission Records ──────────────────────────────────────────────────────
 
 model CommissionRecord {
-  idCommissionRecord   Int                @id @default(autoincrement())
-  idProductTransaction Int
-  idPayment            Int?
-  idAffiliate          Int?
-  commissionType       String             @db.VarChar(20) // 'affiliate' | 'agency' | 'cmo'
-  recipientType        String             @db.VarChar(20) // 'member' | 'dep1' | 'dep2' | 'dep3' | 'dep4'
-  commissionAmount     Decimal            @db.Decimal(10, 2)
-  commissionRate       Decimal            @db.Decimal(6, 2)
-  status               String             @default("pending") @db.VarChar(20) // 'pending' | 'approved' | 'paid'
-  paidAt               DateTime?
-  notes                String?            @db.Text
-  productTransaction   ProductTransaction @relation(fields: [idProductTransaction], references: [idProductTransaction])
-  payment              Payment?           @relation(fields: [idPayment], references: [idPayment])
-  affiliate            Affiliate?         @relation(fields: [idAffiliate], references: [idAffiliate])
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  idCommissionRecord     Int                      @id @default(autoincrement())
+  idPayment              Int
+  coverageStartDate      DateTime                 @db.Date
+  coverageEndDate        DateTime                 @db.Date
+  authorizationDate      DateTime                 @db.Date
+  status                 String                   @default("ingested") @db.VarChar(30)
+  sellerAmount           Decimal                  @db.Decimal(10, 2)
+  affiliateAmount        Decimal?                 @db.Decimal(10, 2)
+  agencyAmount           Decimal?                 @db.Decimal(10, 2)
+  idAffiliateProductCommissionRate Int?
+  idAgencyProductCommissionRate    Int?
+  idSellerBeneficiary    Int?
+  idAffiliateBeneficiary Int?
+  idAgencyBeneficiary    Int?
+  idCancellationReason   Int?
+  cancellationNotes      String?                  @db.Text
+  cancelledByUserId      Int?
+  rejectionReason        String?                  @db.Text
+  flaggedForReview       Boolean                  @default(false)
+  reviewNotes            String?                  @db.Text
+  helixClientId          Int?
+  clientName             String?                  @db.VarChar(200)
+  clientEmail            String?                  @db.VarChar(191)
+  productName            String?                  @db.VarChar(150)
+  sellerName             String?                  @db.VarChar(200)
+  affiliateName          String?                  @db.VarChar(150)
+  agencyName             String?                  @db.VarChar(150)
+  payment                Payment                  @relation(fields: [idPayment], references: [idPayment])
+  sellerBeneficiary      Beneficiary?             @relation("SellerBeneficiary", fields: [idSellerBeneficiary], references: [idBeneficiary])
+  affiliateBeneficiary   Beneficiary?             @relation("AffiliateBeneficiary", fields: [idAffiliateBeneficiary], references: [idBeneficiary])
+  agencyBeneficiary      Beneficiary?             @relation("AgencyBeneficiary", fields: [idAgencyBeneficiary], references: [idBeneficiary])
+  cancellationReason     CancellationReason?      @relation(fields: [idCancellationReason], references: [idCancellationReason])
+  stateHistory           CommissionStateHistory[]
+  paymentBatchRecords    PaymentBatchRecord[]
+  adjustments            CommissionAdjustment[]
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
 
   @@map("commission_records")
+}
+
+model CommissionStateHistory {
+  idStateHistory     Int              @id @default(autoincrement())
+  idCommissionRecord Int
+  fromStatus         String           @db.VarChar(30)
+  toStatus           String           @db.VarChar(30)
+  changedByUserId    Int?
+  notes              String?          @db.Text
+  commissionRecord   CommissionRecord @relation(fields: [idCommissionRecord], references: [idCommissionRecord])
+  changedByUser      User?            @relation(fields: [changedByUserId], references: [idUser])
+  createdAt          DateTime         @default(now())
+
+  @@map("commission_state_history")
+}
+
+// ─── Payment Reversals (Helix refunds) ───────────────────────────────────────
+
+// One row per reversed payment *episode*. `idPayment` points at the specific
+// Payment row (not the raw Helix id) that was active when the refund landed,
+// so a later re-payment of the same helixPaymentId creates a new Payment row
+// and gets its own independent reversal here if it's ever refunded again.
+model PaymentReversal {
+  idPaymentReversal      Int                    @id @default(autoincrement())
+  idPayment              Int                    @unique
+  previousPaymentStatus  Int
+  currentPaymentStatus   Int
+  reason                 String                 @db.VarChar(50)
+  helixReversedAt        DateTime
+  payment                Payment                @relation(fields: [idPayment], references: [idPayment])
+  adjustments            CommissionAdjustment[]
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+
+  @@map("payment_reversals")
+}
+
+// Negative commission owed back by a beneficiary because a CommissionRecord
+// that was already 'paid' got reversed in Helix. Recorded here as
+// 'pending_netting' for a human/finance process to apply against the
+// beneficiary's next payment batch — this task does not automate the netting.
+model CommissionAdjustment {
+  idCommissionAdjustment Int              @id @default(autoincrement())
+  idBeneficiary          Int
+  idCommissionRecord     Int
+  idPaymentReversal      Int
+  entityType             String           @db.VarChar(20)
+  amount                 Decimal          @db.Decimal(10, 2)
+  status                 String           @default("pending_netting") @db.VarChar(20)
+  notes                  String?          @db.Text
+  beneficiary            Beneficiary      @relation(fields: [idBeneficiary], references: [idBeneficiary])
+  commissionRecord       CommissionRecord @relation(fields: [idCommissionRecord], references: [idCommissionRecord])
+  paymentReversal        PaymentReversal  @relation(fields: [idPaymentReversal], references: [idPaymentReversal])
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  @@map("commission_adjustments")
+}
+
+// ─── Cron Execution Log ──────────────────────────────────────────────────────
+
+model CronExecutionLog {
+  idCronLog        Int       @id @default(autoincrement())
+  cronType         String    @db.VarChar(50)
+  startedAt        DateTime
+  finishedAt       DateTime?
+  status           String    @db.VarChar(20)
+  recordsProcessed Int?
+  errorMessage     String?   @db.Text
+  attemptNumber    Int       @default(1)
+  createdAt        DateTime  @default(now())
+  payments         Payment[]
+
+  @@map("cron_execution_log")
+}
+
+// ─── Payment Batches ─────────────────────────────────────────────────────────
+
+model PaymentBatch {
+  idPaymentBatch Int               @id @default(autoincrement())
+  processedAt    DateTime
+  status         String            @db.VarChar(20)
+  totalAmount    Decimal           @db.Decimal(12, 2)
+  batchItems     PaymentBatchItem[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@map("payment_batches")
+}
+
+model PaymentBatchItem {
+  idPaymentBatchItem Int                  @id @default(autoincrement())
+  idPaymentBatch     Int
+  idBeneficiary      Int
+  totalAmount        Decimal              @db.Decimal(12, 2)
+  qboBillPaymentId   String?              @db.VarChar(100)
+  status             String               @db.VarChar(20)
+  rejectionReason    String?              @db.Text
+  paidAt             DateTime?
+  paymentBatch       PaymentBatch         @relation(fields: [idPaymentBatch], references: [idPaymentBatch])
+  beneficiary        Beneficiary          @relation(fields: [idBeneficiary], references: [idBeneficiary])
+  batchRecords       PaymentBatchRecord[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@map("payment_batch_items")
+}
+
+model PaymentBatchRecord {
+  idBatchRecord      Int              @id @default(autoincrement())
+  idPaymentBatchItem Int
+  idCommissionRecord Int
+  entityType         String           @db.VarChar(20)
+  amount             Decimal          @db.Decimal(10, 2)
+  paymentBatchItem   PaymentBatchItem @relation(fields: [idPaymentBatchItem], references: [idPaymentBatchItem])
+  commissionRecord   CommissionRecord @relation(fields: [idCommissionRecord], references: [idCommissionRecord])
+
+  @@unique([idPaymentBatchItem, idCommissionRecord, entityType])
+  @@map("payment_batch_records")
 }

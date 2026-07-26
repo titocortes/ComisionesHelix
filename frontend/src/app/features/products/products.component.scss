@@ -1,0 +1,154 @@
+.products-page {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  .page-title {
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--p-primary-color, #0a2342);
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      color: var(--p-text-muted-color, #6b7280);
+    }
+  }
+}
+
+// ── Filter bar ────────────────────────────────────────────────────────────────
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  background: var(--p-surface-50, #f9fafb);
+  border: 1px solid var(--p-surface-200, #e5e7eb);
+  border-radius: 0.5rem;
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 2rem;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.no-rate {
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color, #9ca3af);
+  font-style: italic;
+}
+
+// ── Dialogs — shared ──────────────────────────────────────────────────────────
+
+.form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 0.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--p-text-color);
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.req {
+  color: var(--p-red-500, #ef4444);
+}
+
+.rate-hint {
+  margin: 0 0 0.25rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--p-surface-100, #f3f4f6);
+  border-left: 3px solid var(--p-primary-color, #0a2342);
+  border-radius: 0 0.375rem 0.375rem 0;
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color, #6b7280);
+  line-height: 1.5;
+}
+
+// ── Discounts dialog ──────────────────────────────────────────────────────────
+
+.discounts-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.discount-form-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+  margin-bottom: 0.25rem;
+}
+
+.discount-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.field-checkbox {
+  align-items: center;
+  flex-direction: row;
+  gap: 0.5rem;
+  padding-bottom: 0.375rem;
+
+  .field-label {
+    margin-bottom: 0;
+  }
+}
+
+.field-actions {
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0.375rem;
+  padding-bottom: 0.125rem;
+}
+
+.editing-row td {
+  background: var(--p-primary-50, #eff6ff) !important;
+}
+
+.text-green-600 {
+  color: #16a34a;
+}
+
+.text-color-secondary {
+  color: var(--p-text-muted-color, #9ca3af);
+}

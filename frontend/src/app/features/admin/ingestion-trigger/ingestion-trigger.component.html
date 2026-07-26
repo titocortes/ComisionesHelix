@@ -1,0 +1,113 @@
+<div class="ingestion-page">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-title">
+      <h2>{{ 'ingestion.title' | translate }}</h2>
+      <span class="subtitle">{{ 'ingestion.subtitle' | translate }}</span>
+    </div>
+    <p-tag value="Admin" icon="pi pi-shield" severity="warn" />
+  </div>
+
+  <!-- ── Trigger card ────────────────────────────────────────────────────── -->
+  <p-card styleClass="trigger-card">
+    <div class="trigger-body">
+      <div class="trigger-info">
+        <i class="pi pi-sync trigger-icon"></i>
+        <div>
+          <p class="trigger-desc">{{ 'ingestion.description' | translate }}</p>
+          <p class="trigger-warning">{{ 'ingestion.warning' | translate }}</p>
+        </div>
+      </div>
+
+      <p-button
+        [label]="running ? ('ingestion.running' | translate) : ('ingestion.trigger_btn' | translate)"
+        icon="pi pi-play"
+        size="large"
+        [loading]="running"
+        (onClick)="trigger()"
+      />
+    </div>
+  </p-card>
+
+  <!-- ── Error ───────────────────────────────────────────────────────────── -->
+  @if (errorMessage) {
+    <p-card styleClass="error-card">
+      <div class="error-header">
+        <i class="pi pi-times-circle error-icon"></i>
+        <span class="error-title">{{ 'ingestion.error_title' | translate }}</span>
+        @if (errorDetail) {
+          <span class="error-detail">{{ errorDetail }}</span>
+        }
+      </div>
+      <p-divider />
+      <p class="error-body">{{ errorMessage }}</p>
+      <p class="error-hint">{{ 'ingestion.error_hint' | translate }}</p>
+    </p-card>
+  }
+
+  <!-- ── Result ──────────────────────────────────────────────────────────── -->
+  @if (result) {
+    <p-card styleClass="result-card" [ngClass]="{ 'result-card--warn': hasFailures }">
+
+      <div class="result-header">
+        <div class="result-status">
+          <i
+            class="pi result-icon"
+            [ngClass]="hasFailures ? 'pi-exclamation-triangle result-icon--warn' : 'pi-check-circle result-icon--ok'"
+          ></i>
+          <span class="result-title">
+            {{ hasFailures ? ('ingestion.result_partial' | translate) : ('ingestion.result_ok' | translate) }}
+          </span>
+        </div>
+        <span class="result-time">
+          {{ 'ingestion.executed_at' | translate }}
+          {{ result.executedAt | date:'dd/MM/yyyy HH:mm:ss' }}
+        </span>
+      </div>
+
+      <p-divider />
+
+      <div class="result-stats">
+
+        <div class="stat-item">
+          <span class="stat-icon pi pi-cloud-download stat-blue"></span>
+          <div class="stat-body">
+            <span class="stat-label">{{ 'ingestion.stat_received' | translate }}</span>
+            <span class="stat-value">{{ result.invoicesReceived }}</span>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-icon pi pi-check stat-green"></span>
+          <div class="stat-body">
+            <span class="stat-label">{{ 'ingestion.stat_processed' | translate }}</span>
+            <span class="stat-value stat-value--ok">{{ result.processed }}</span>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-icon pi pi-times" [ngClass]="hasFailures ? 'stat-red' : 'stat-muted'"></span>
+          <div class="stat-body">
+            <span class="stat-label">{{ 'ingestion.stat_failed' | translate }}</span>
+            <span class="stat-value" [ngClass]="hasFailures ? 'stat-value--error' : ''">
+              {{ result.failed }}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      @if (hasFailures) {
+        <p-divider />
+        <p-message
+          severity="warn"
+          [text]="'ingestion.failures_hint' | translate"
+          styleClass="w-full"
+        />
+      }
+
+    </p-card>
+  }
+
+</div>

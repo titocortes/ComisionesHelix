@@ -33,7 +33,7 @@ export class AuthService {
   async refresh(token: string) {
     const stored = await this.prisma.refreshToken.findFirst({
       where: { token, revoked: false },
-      include: { user: true },
+      include: { user: { include: { userRole: true } } },
     });
 
     if (!stored || stored.expiresAt < new Date()) {
@@ -63,6 +63,7 @@ export class AuthService {
     securityLevel: number;
     idUserRole: number;
     idAffiliate: number | null;
+    userRole?: { roleName: string } | null;
   }) {
     const payload: JwtPayload = {
       sub: user.idUser,
@@ -105,6 +106,7 @@ export class AuthService {
         userEmail: user.userEmail,
         securityLevel: user.securityLevel,
         idUserRole: user.idUserRole,
+        roleName: user.userRole?.roleName ?? null,
       },
     };
   }

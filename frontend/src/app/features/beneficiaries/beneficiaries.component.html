@@ -1,0 +1,259 @@
+<p-toast />
+<p-confirmpopup />
+
+<div class="page-header">
+  <div>
+    <h1>Beneficiarios</h1>
+    <p class="subtitle">Registro de información financiera de Agencias y Afiliados para pago de comisiones en QuickBooks</p>
+  </div>
+</div>
+
+<p-tabs [(value)]="activeTab">
+
+  <p-tablist>
+    <p-tab value="0">
+      <i class="pi pi-building" style="margin-right:.4rem"></i>
+      Agencias
+      @if (!loading) {
+        <span class="tab-count">{{ registeredAgencies }}/{{ agencyRows.length }}</span>
+      }
+    </p-tab>
+    <p-tab value="1">
+      <i class="pi pi-users" style="margin-right:.4rem"></i>
+      Afiliados
+      @if (!loading) {
+        <span class="tab-count">{{ registeredAffiliates }}/{{ affiliateRows.length }}</span>
+      }
+    </p-tab>
+  </p-tablist>
+
+  <p-tabpanels>
+
+    <!-- ══════════════════ TAB 1 — AGENCIAS ══════════════════ -->
+    <p-tabpanel value="0">
+      <div class="tab-toolbar">
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input
+            pInputText
+            [(ngModel)]="agencySearch"
+            (ngModelChange)="applyAgencySearch()"
+            placeholder="Buscar agencia..."
+            class="search-input"
+          />
+        </p-iconfield>
+        @if (agencySearch) {
+          <p-button icon="pi pi-times" severity="secondary" [text]="true" (click)="clearAgencySearch()" />
+        }
+      </div>
+
+      <p-table
+        [value]="filteredAgencyRows"
+        [loading]="loading"
+        [rowHover]="true"
+        class="p-datatable-sm p-datatable-gridlines"
+      >
+        <ng-template #header>
+          <tr>
+            <th>Agencia</th>
+            <th style="width:110px">ID Helix</th>
+            <th>Email Helix</th>
+            <th>Nombre en QBO</th>
+            <th>Email en QBO</th>
+            <th>QBO Vendor ID</th>
+            <th style="width:90px">Estado</th>
+            <th style="width:110px" class="text-center">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-row>
+          <tr>
+            <td class="fw-medium">{{ row.agencyName }}</td>
+            <td class="text-muted mono">{{ row.idAgency }}</td>
+            <td class="text-muted small">{{ row.reportEmail || '—' }}</td>
+
+            @if (row.beneficiary) {
+              <td>{{ row.beneficiary.name }}</td>
+              <td class="text-muted small">{{ row.beneficiary.email || '—' }}</td>
+              <td>
+                @if (row.beneficiary.qboVendorId) {
+                  <span class="qbo-id">{{ row.beneficiary.qboVendorId }}</span>
+                } @else {
+                  <span class="pending-badge">Pendiente en QBO</span>
+                }
+              </td>
+              <td>
+                <p-tag [severity]="getStatusSeverity(row.beneficiary.active)" [value]="getStatusLabel(row.beneficiary.active)" />
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <p-button icon="pi pi-pencil" size="small" severity="secondary" [text]="true" pTooltip="Editar" (click)="openEdit(row.beneficiary)" />
+                  @if (row.beneficiary.active) {
+                    <p-button icon="pi pi-ban" size="small" severity="danger" [text]="true" pTooltip="Desactivar" (click)="confirmDeactivate(row.beneficiary, $event)" />
+                  }
+                </div>
+              </td>
+            } @else {
+              <td colspan="4" class="no-beneficiary">Sin beneficiario registrado</td>
+              <td>
+                <p-button label="Registrar" icon="pi pi-plus" size="small" (click)="openRegisterAgency(row)" />
+              </td>
+            }
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="8" class="text-center py-4 text-muted">
+              @if (!loading) { No se encontraron agencias. }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-tabpanel>
+
+    <!-- ══════════════════ TAB 2 — AFILIADOS ══════════════════ -->
+    <p-tabpanel value="1">
+      <div class="tab-toolbar">
+        <p-select
+          [options]="agencyFilterOptions"
+          [(ngModel)]="affiliateAgencyFilter"
+          (ngModelChange)="applyAffiliateFilters()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Filtrar por agencia..."
+          [showClear]="false"
+          class="agency-select"
+        />
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input
+            pInputText
+            [(ngModel)]="affiliateSearch"
+            (ngModelChange)="applyAffiliateFilters()"
+            placeholder="Buscar afiliado..."
+            class="search-input"
+          />
+        </p-iconfield>
+        @if (affiliateSearch) {
+          <p-button icon="pi pi-times" severity="secondary" [text]="true" (click)="clearAffiliateSearch()" />
+        }
+      </div>
+
+      <p-table
+        [value]="filteredAffiliateRows"
+        [loading]="loading"
+        [rowHover]="true"
+        class="p-datatable-sm p-datatable-gridlines"
+      >
+        <ng-template #header>
+          <tr>
+            <th>Afiliado</th>
+            <th>Agencia</th>
+            <th style="width:110px">ID Helix</th>
+            <th>Email Helix</th>
+            <th>Nombre en QBO</th>
+            <th>Email en QBO</th>
+            <th>QBO Vendor ID</th>
+            <th style="width:90px">Estado</th>
+            <th style="width:110px" class="text-center">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-row>
+          <tr>
+            <td class="fw-medium">{{ row.affiliateName }}</td>
+            <td><span class="agency-badge">{{ row.agencyName }}</span></td>
+            <td class="text-muted mono">{{ row.idAffiliate }}</td>
+            <td class="text-muted small">{{ row.reportEmail || '—' }}</td>
+
+            @if (row.beneficiary) {
+              <td>{{ row.beneficiary.name }}</td>
+              <td class="text-muted small">{{ row.beneficiary.email || '—' }}</td>
+              <td>
+                @if (row.beneficiary.qboVendorId) {
+                  <span class="qbo-id">{{ row.beneficiary.qboVendorId }}</span>
+                } @else {
+                  <span class="pending-badge">Pendiente en QBO</span>
+                }
+              </td>
+              <td>
+                <p-tag [severity]="getStatusSeverity(row.beneficiary.active)" [value]="getStatusLabel(row.beneficiary.active)" />
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <p-button icon="pi pi-pencil" size="small" severity="secondary" [text]="true" pTooltip="Editar" (click)="openEdit(row.beneficiary)" />
+                  @if (row.beneficiary.active) {
+                    <p-button icon="pi pi-ban" size="small" severity="danger" [text]="true" pTooltip="Desactivar" (click)="confirmDeactivate(row.beneficiary, $event)" />
+                  }
+                </div>
+              </td>
+            } @else {
+              <td colspan="4" class="no-beneficiary">Sin beneficiario registrado</td>
+              <td>
+                <p-button label="Registrar" icon="pi pi-plus" size="small" (click)="openRegisterAffiliate(row)" />
+              </td>
+            }
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="9" class="text-center py-4 text-muted">
+              @if (!loading) { No se encontraron afiliados. }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-tabpanel>
+
+  </p-tabpanels>
+
+</p-tabs>
+
+<!-- ══════════════════ DIALOG ══════════════════ -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="dialogTitle"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [draggable]="false"
+>
+  <div class="dialog-body">
+    @if (dialogEntityLabel) {
+      <div class="entity-info">
+        <i class="pi pi-tag"></i>
+        <span>{{ dialogEntityLabel }}</span>
+      </div>
+      <p-divider />
+    }
+
+    <div class="field">
+      <label>Nombre del beneficiario *</label>
+      <input pInputText [(ngModel)]="formName" placeholder="Nombre completo" class="w-full" />
+    </div>
+
+    <div class="field">
+      <label>Correo electrónico</label>
+      <input pInputText [(ngModel)]="formEmail" placeholder="correo@ejemplo.com" type="email" class="w-full" />
+    </div>
+
+    @if (dialogMode === 'create') {
+      <div class="qbo-note">
+        <i class="pi pi-info-circle"></i>
+        Al registrar se creará automáticamente un Vendor en QuickBooks Online. Los datos bancarios se capturan directamente en QBO.
+      </div>
+    }
+  </div>
+
+  <ng-template #footer>
+    <p-button label="Cancelar" severity="secondary" [text]="true" (click)="dialogVisible = false" [disabled]="dialogSaving" />
+    <p-button
+      [label]="dialogMode === 'create' ? 'Registrar en QBO' : 'Guardar'"
+      [icon]="dialogMode === 'create' ? 'pi pi-cloud-upload' : 'pi pi-check'"
+      (click)="save()"
+      [loading]="dialogSaving"
+      [disabled]="!formName.trim()"
+    />
+  </ng-template>
+</p-dialog>

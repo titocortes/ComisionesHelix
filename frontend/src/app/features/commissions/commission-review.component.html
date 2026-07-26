@@ -1,0 +1,548 @@
+<p-toast position="top-right" />
+
+<div class="review-page">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-title">
+      <h2>{{ 'review.title' | translate }}</h2>
+      <span class="subtitle">{{ 'review.subtitle' | translate }}</span>
+    </div>
+
+    <div class="segment-summary">
+      <div
+        class="segment-chip segment-new"
+        [class.active]="ageSegment === 'new'"
+        (click)="selectSegment('new')"
+      >
+        <span class="chip-count">{{ counts.new }}</span>
+        <span class="chip-label">1–15 días</span>
+      </div>
+      <div
+        class="segment-chip segment-progress"
+        [class.active]="ageSegment === 'in_progress'"
+        (click)="selectSegment('in_progress')"
+      >
+        <span class="chip-count">{{ counts.in_progress }}</span>
+        <span class="chip-label">16–35 días</span>
+      </div>
+      <div
+        class="segment-chip segment-upcoming"
+        [class.active]="ageSegment === 'upcoming_authorization'"
+        (click)="selectSegment('upcoming_authorization')"
+      >
+        <span class="chip-count">{{ counts.upcoming_authorization }}</span>
+        <span class="chip-label">36–45 días</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tabs ───────────────────────────────────────────────────────────── -->
+  <p-tabs [(value)]="activeTab">
+    <p-tablist>
+      <p-tab value="0">Por Invoice</p-tab>
+      <p-tab value="1">Por Beneficiario</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- Tab 1 — Invoice list                                            -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <p-tabpanel value="0">
+
+        <!-- Filters -->
+        <div class="filter-bar">
+          <p-iconfield>
+            <p-inputicon class="pi pi-user" />
+            <input
+              pInputText
+              type="text"
+              [(ngModel)]="sellerFilter"
+              [placeholder]="'review.filter_seller' | translate"
+              (keyup.enter)="loadRecords()"
+            />
+          </p-iconfield>
+
+          <p-iconfield>
+            <p-inputicon class="pi pi-box" />
+            <input
+              pInputText
+              type="text"
+              [(ngModel)]="productFilter"
+              [placeholder]="'review.filter_product' | translate"
+              (keyup.enter)="loadRecords()"
+            />
+          </p-iconfield>
+
+          <p-selectbutton
+            [options]="ageOptions"
+            [(ngModel)]="ageSegment"
+            optionLabel="label"
+            optionValue="value"
+            (ngModelChange)="onSegmentButtonChange()"
+          />
+
+          <p-button
+            icon="pi pi-search"
+            [label]="'review.search' | translate"
+            (onClick)="loadRecords()"
+          />
+          <p-button
+            icon="pi pi-times"
+            severity="secondary"
+            [text]="true"
+            [title]="'review.clear' | translate"
+            (onClick)="clearFilters()"
+          />
+          <p-button
+            icon="pi pi-refresh"
+            severity="warn"
+            [outlined]="true"
+            label="Recalcular Ingested"
+            title="Recalcular comisiones de todos los registros ingested"
+            (onClick)="openRecalculateAllDialog()"
+          />
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+          <p-table
+            [value]="filteredRecords"
+            [loading]="loading"
+            [paginator]="true"
+            [rows]="25"
+            [rowsPerPageOptions]="[25, 50, 100]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} registros"
+            class="p-datatable-sm p-datatable-gridlines"
+            [tableStyle]="{ 'min-width': '55rem' }"
+            sortField="daysElapsed"
+            [sortOrder]="-1"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="helixPaymentId" style="width:100px">
+                  ID Helix <p-sortIcon field="helixPaymentId" />
+                </th>
+                <th pSortableColumn="coverageStartDate" style="width:100px">
+                  Inicio <p-sortIcon field="coverageStartDate" />
+                </th>
+                <th pSortableColumn="daysElapsed" style="width:90px">
+                  Días <p-sortIcon field="daysElapsed" />
+                </th>
+                <th pSortableColumn="clientName" style="min-width:160px">
+                  Cliente <p-sortIcon field="clientName" />
+                </th>
+                <th pSortableColumn="productName" style="min-width:160px">
+                  Producto <p-sortIcon field="productName" />
+                </th>
+                <th pSortableColumn="sellerName" style="min-width:140px">
+                  Vendedor <p-sortIcon field="sellerName" />
+                </th>
+                <th pSortableColumn="invoiceAmount" style="width:120px; text-align:right">
+                  Invoice <p-sortIcon field="invoiceAmount" />
+                </th>
+                <th style="width:100px; text-align:center">Acciones</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-r>
+              <tr class="clickable-row" (click)="openDetail(r)">
+                <td style="text-align:center; font-family:monospace; font-size:0.8125rem">
+                  {{ r.helixPaymentId }}
+                </td>
+                <td>{{ r.coverageStartDate | date:'dd/MM/yyyy' }}</td>
+                <td style="text-align:center">
+                  <p-tag
+                    [value]="getDaysLabel(r.daysElapsed)"
+                    [severity]="getDaysSeverity(r.daysElapsed)"
+                  />
+                </td>
+                <td>{{ r.clientName  || '—' }}</td>
+                <td>{{ r.productName || '—' }}</td>
+                <td>{{ r.sellerName  || '—' }}</td>
+                <td style="text-align:right">
+                  {{ r.invoiceAmount | currency:'USD':'symbol':'1.2-2' }}
+                </td>
+                <td style="text-align:center" (click)="$event.stopPropagation()">
+                  <p-button
+                    icon="pi pi-refresh"
+                    severity="secondary"
+                    [text]="true"
+                    [rounded]="true"
+                    size="small"
+                    title="Recalcular comisión"
+                    [loading]="recalculatingId === r.idCommissionRecord"
+                    [disabled]="recalculatingId !== null"
+                    (onClick)="recalculateRecord(r, $event)"
+                  />
+                  <p-button
+                    icon="pi pi-ban"
+                    severity="danger"
+                    [text]="true"
+                    [rounded]="true"
+                    size="small"
+                    title="Cancelar comisión"
+                    (onClick)="openCancelDialog(r, $event)"
+                  />
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="8" class="empty-message">
+                  {{ 'review.no_results' | translate }}
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      </p-tabpanel>
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- Tab 2 — Beneficiary summary                                     -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <p-tabpanel value="1">
+
+        <div class="beneficiary-toolbar">
+          <p-selectbutton
+            [options]="typeOptions"
+            [(ngModel)]="beneficiaryTypeFilter"
+            optionLabel="label"
+            optionValue="value"
+            (ngModelChange)="onBeneficiaryTypeChange()"
+          />
+          <span class="beneficiary-count">
+            {{ filteredBeneficiaries.length }} beneficiario{{ filteredBeneficiaries.length !== 1 ? 's' : '' }}
+          </span>
+        </div>
+
+        <div class="table-wrapper">
+          <p-table
+            [value]="filteredBeneficiaries"
+            [loading]="loading"
+            [paginator]="true"
+            [rows]="25"
+            [rowsPerPageOptions]="[25, 50, 100]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} registros"
+            class="p-datatable-sm p-datatable-gridlines"
+            sortField="totalAmount"
+            [sortOrder]="-1"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="name" style="min-width:180px">
+                  Beneficiario <p-sortIcon field="name" />
+                </th>
+                <th pSortableColumn="type" style="width:120px">
+                  Tipo <p-sortIcon field="type" />
+                </th>
+                <th pSortableColumn="invoiceCount" style="width:110px; text-align:right">
+                  # Invoices <p-sortIcon field="invoiceCount" />
+                </th>
+                <th pSortableColumn="totalAmount" style="width:150px; text-align:right">
+                  Total Comisión <p-sortIcon field="totalAmount" />
+                </th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-b>
+              <tr class="clickable-row" (click)="openBeneficiaryDetail(b)">
+                <td><strong>{{ b.name }}</strong></td>
+                <td>
+                  <p-tag
+                    [value]="b.type"
+                    [severity]="getTypeSeverity(b.typeKey)"
+                  />
+                </td>
+                <td style="text-align:right">{{ b.invoiceCount }}</td>
+                <td style="text-align:right; font-weight:600">
+                  {{ b.totalAmount | currency:'USD':'symbol':'1.2-2' }}
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="empty-message">Sin resultados</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+</div>
+
+<!-- ── Invoice detail dialog ──────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="detailVisible"
+  [header]="'Invoice #' + (selectedRecord?.helixPaymentId ?? '')"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  [closable]="true"
+>
+  @if (selectedRecord) {
+    <div class="detail-body">
+
+      <!-- Identification -->
+      <section class="detail-section">
+        <h4 class="section-title">Identificación</h4>
+        <div class="detail-grid">
+          <span class="dl">Cliente</span>
+          <span class="dv">{{ selectedRecord.clientName || '—' }}</span>
+          <span class="dl">Producto</span>
+          <span class="dv">{{ selectedRecord.productName || '—' }}</span>
+          <span class="dl">Vendedor</span>
+          <span class="dv">{{ selectedRecord.sellerName || '—' }}</span>
+          <span class="dl">Afiliado</span>
+          <span class="dv">{{ selectedRecord.affiliateName || '—' }}</span>
+          <span class="dl">Agencia</span>
+          <span class="dv">{{ selectedRecord.agencyName || '—' }}</span>
+        </div>
+      </section>
+
+      <p-divider />
+
+      <!-- Coverage -->
+      <section class="detail-section">
+        <h4 class="section-title">Cobertura</h4>
+        <div class="detail-grid">
+          <span class="dl">Inicio cobertura</span>
+          <span class="dv">{{ selectedRecord.coverageStartDate | date:'dd/MM/yyyy' }}</span>
+          <span class="dl">Fin cobertura</span>
+          <span class="dv">{{ selectedRecord.coverageEndDate | date:'dd/MM/yyyy' }}</span>
+          <span class="dl">Días transcurridos</span>
+          <span class="dv">
+            <p-tag
+              [value]="getDaysLabel(selectedRecord.daysElapsed)"
+              [severity]="getDaysSeverity(selectedRecord.daysElapsed)"
+            />
+          </span>
+          <span class="dl">Fecha autorización</span>
+          <span class="dv">{{ selectedRecord.authorizationDate | date:'dd/MM/yyyy' }}</span>
+        </div>
+      </section>
+
+      <p-divider />
+
+      <!-- Commission breakdown -->
+      <section class="detail-section">
+        <h4 class="section-title">Desglose de Comisión</h4>
+        <div class="detail-grid detail-grid--money">
+          <span class="dl">Monto invoice</span>
+          <span class="dv money">{{ selectedRecord.invoiceAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+
+          <span class="dl">Comisión vendedor</span>
+          <span class="dv money">{{ selectedRecord.sellerAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+
+          <span class="dl">Comisión afiliado</span>
+          <span class="dv money">{{ selectedRecord.affiliateAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+
+          <span class="dl">Comisión agencia</span>
+          <span class="dv money">{{ selectedRecord.agencyAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+
+          <span class="dl total-label">Total comisión</span>
+          <span class="dv money total-value">{{ getTotal(selectedRecord) | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
+      </section>
+
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cerrar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="detailVisible = false"
+    />
+    <p-button
+      icon="pi pi-ban"
+      label="Cancelar comisión"
+      severity="danger"
+      [outlined]="true"
+      (onClick)="openCancelDialog(selectedRecord!, $event); detailVisible = false"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Beneficiary drill-down dialog ──────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="beneficiaryDetailVisible"
+  [header]="(selectedBeneficiary?.name ?? '') + ' — ' + (selectedBeneficiary?.type ?? '')"
+  [modal]="true"
+  [style]="{ width: '700px' }"
+  [draggable]="false"
+  [closable]="true"
+>
+  @if (selectedBeneficiary) {
+    <div class="beneficiary-detail">
+
+      <div class="bdet-summary">
+        <div class="bdet-stat">
+          <span class="bdet-label"># Invoices</span>
+          <span class="bdet-value">{{ selectedBeneficiary.invoiceCount }}</span>
+        </div>
+        <div class="bdet-stat">
+          <span class="bdet-label">Total Comisión</span>
+          <span class="bdet-value money">{{ selectedBeneficiary.totalAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <p-divider />
+
+      <p-table
+        [value]="selectedBeneficiary.records"
+        class="p-datatable-sm p-datatable-gridlines"
+        [paginator]="selectedBeneficiary.records.length > 10"
+        [rows]="10"
+        sortField="daysElapsed"
+        [sortOrder]="-1"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="helixPaymentId" style="width:90px">ID Helix <p-sortIcon field="helixPaymentId" /></th>
+            <th pSortableColumn="coverageStartDate" style="width:100px">Inicio <p-sortIcon field="coverageStartDate" /></th>
+            <th pSortableColumn="daysElapsed" style="width:80px">Días <p-sortIcon field="daysElapsed" /></th>
+            <th pSortableColumn="clientName" style="min-width:140px">Cliente <p-sortIcon field="clientName" /></th>
+            <th pSortableColumn="productName" style="min-width:130px">Producto <p-sortIcon field="productName" /></th>
+            <th style="width:120px; text-align:right">Comisión</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-r>
+          <tr>
+            <td style="text-align:center; font-family:monospace; font-size:0.8125rem">{{ r.helixPaymentId }}</td>
+            <td>{{ r.coverageStartDate | date:'dd/MM/yyyy' }}</td>
+            <td style="text-align:center">
+              <p-tag [value]="getDaysLabel(r.daysElapsed)" [severity]="getDaysSeverity(r.daysElapsed)" />
+            </td>
+            <td>{{ r.clientName  || '—' }}</td>
+            <td>{{ r.productName || '—' }}</td>
+            <td style="text-align:right; font-weight:600">
+              {{ amountFor(r, selectedBeneficiary!.typeKey) | currency:'USD':'symbol':'1.2-2' }}
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cerrar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="beneficiaryDetailVisible = false"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Recalculate All confirmation dialog ────────────────────────────────── -->
+<p-dialog
+  [(visible)]="recalculateAllVisible"
+  header="Recalcular Comisiones Ingested"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [closable]="!recalculatingAll"
+  [draggable]="false"
+>
+  <div class="cancel-form">
+    <p style="margin: 0 0 1rem">
+      Se recalcularán los montos de <strong>todos los registros en estado Ingested</strong>.
+      Esta acción sobrescribirá los valores de comisión actuales con los valores calculados
+      según las tasas configuradas en el sistema.
+    </p>
+    <p style="margin: 0; color: var(--p-yellow-600); font-size: 0.875rem">
+      <i class="pi pi-exclamation-triangle" style="margin-right: 0.25rem"></i>
+      Esta acción no se puede deshacer.
+    </p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="recalculateAllVisible = false"
+      [disabled]="recalculatingAll"
+    />
+    <p-button
+      icon="pi pi-refresh"
+      label="Confirmar Recálculo"
+      severity="warn"
+      (onClick)="confirmRecalculateAll()"
+      [loading]="recalculatingAll"
+      [disabled]="recalculatingAll"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Cancel dialog ──────────────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="cancelVisible"
+  [header]="'review.cancel_title' | translate"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [closable]="!cancelSaving"
+  [draggable]="false"
+>
+  <div class="cancel-form">
+    <div class="field">
+      <label class="field-label">{{ 'review.cancel_reason' | translate }} <span class="required">*</span></label>
+      <p-select
+        [options]="cancellationReasons"
+        [(ngModel)]="selectedReasonId"
+        optionLabel="reason"
+        optionValue="idCancellationReason"
+        [placeholder]="'review.cancel_reason_placeholder' | translate"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+
+    <div class="field">
+      <label class="field-label">{{ 'review.cancel_notes' | translate }}</label>
+      <textarea
+        pTextarea
+        [(ngModel)]="cancelNotes"
+        rows="3"
+        [placeholder]="'review.cancel_notes_placeholder' | translate"
+        style="width: 100%; resize: vertical"
+      ></textarea>
+    </div>
+
+    @if (activeRecord) {
+      <div class="cancel-summary">
+        <span><strong>Cliente:</strong> {{ activeRecord.clientName || '—' }}</span>
+        <span><strong>Producto:</strong> {{ activeRecord.productName || '—' }}</span>
+        <span><strong>Vendedor:</strong> {{ activeRecord.sellerName || '—' }}</span>
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="'review.cancel_abort' | translate"
+      severity="secondary"
+      [text]="true"
+      (onClick)="closeCancelDialog()"
+      [disabled]="cancelSaving"
+    />
+    <p-button
+      [label]="'review.cancel_confirm' | translate"
+      severity="danger"
+      icon="pi pi-ban"
+      (onClick)="confirmCancel()"
+      [loading]="cancelSaving"
+      [disabled]="!selectedReasonId || cancelSaving"
+    />
+  </ng-template>
+</p-dialog>

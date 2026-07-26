@@ -11,6 +11,7 @@ interface NavItem {
   labelKey: string;
   icon: string;
   route: string;
+  adminOnly?: boolean;
 }
 
 @Component({
@@ -24,15 +25,19 @@ export class MainLayoutComponent implements OnInit {
   sidebarCollapsed = false;
   currentUser: AuthUser | null = null;
 
-  readonly navItems: NavItem[] = [
-    { labelKey: 'nav.dashboard',    icon: 'pi-th-large',    route: '/dashboard'    },
-    { labelKey: 'nav.clients',      icon: 'pi-users',       route: '/clients'      },
-    { labelKey: 'nav.products',     icon: 'pi-box',         route: '/products'     },
-    { labelKey: 'nav.transactions', icon: 'pi-arrows-h',    route: '/transactions' },
-    { labelKey: 'nav.payments',     icon: 'pi-credit-card', route: '/payments'     },
-    { labelKey: 'nav.commissions',  icon: 'pi-percentage',  route: '/commissions'  },
-    { labelKey: 'nav.catalogs',     icon: 'pi-database',    route: '/catalogs'     },
+  private readonly allNavItems: NavItem[] = [
+    { labelKey: 'nav.dashboard',      icon: 'pi-th-large',    route: '/dashboard'        },
+    { labelKey: 'nav.commissions',    icon: 'pi-percentage',  route: '/commissions'      },
+    { labelKey: 'nav.beneficiaries',   icon: 'pi-id-card',     route: '/beneficiaries',   adminOnly: true },
+    { labelKey: 'nav.payments',       icon: 'pi-credit-card', route: '/payments',        adminOnly: true },
+    { labelKey: 'nav.products',       icon: 'pi-box',         route: '/products',        adminOnly: true },
+    { labelKey: 'nav.admin_ingestion',icon: 'pi-sync',        route: '/admin/ingestion', adminOnly: true },
   ];
+
+  get navItems(): NavItem[] {
+    const isAdmin = this.currentUser?.roleName?.toLowerCase() === 'admin';
+    return this.allNavItems.filter(item => !item.adminOnly || isAdmin);
+  }
 
   constructor(private authService: AuthService) {}
 

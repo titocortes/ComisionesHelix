@@ -18,7 +18,7 @@ export const appConfig: ApplicationConfig = {
         options: { darkModeSelector: '.dark-mode' }
       }
     }),
-    provideTranslateService({ defaultLanguage: 'en' }),
+    provideTranslateService({ fallbackLang: 'en' }),
     ...provideTranslateHttpLoader({ prefix: '/i18n/', suffix: '.json' })
   ]
 };

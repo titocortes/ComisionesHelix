@@ -1,9 +1,369 @@
+<p-toast position="top-right" />
+
 <div class="dashboard-page">
+
+  <!-- ── Page header ────────────────────────────────────────────────────────── -->
   <div class="page-header">
-    <h1>{{ 'nav.dashboard' | translate }}</h1>
+    <div class="page-title">
+      <h2>Dashboard</h2>
+      <span class="subtitle">Vista general del sistema de comisiones</span>
+    </div>
+    <button
+      pButton
+      icon="pi pi-refresh"
+      class="p-button-text p-button-rounded p-button-sm"
+      pTooltip="Actualizar"
+      [loading]="loading"
+      (click)="load()"
+    ></button>
   </div>
-  <div class="placeholder-card">
-    <i class="pi pi-chart-bar"></i>
-    <p>{{ 'dashboard.coming_soon' | translate }}</p>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────────── -->
+  <div *ngIf="loading && !summary" class="loading-state">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Cargando dashboard...</span>
   </div>
+
+  <!-- ── Error ──────────────────────────────────────────────────────────────── -->
+  <div *ngIf="hasError && !summary" class="error-state">
+    <i class="pi pi-exclamation-circle"></i>
+    <span>No se pudo cargar el dashboard.</span>
+    <button pButton label="Reintentar" icon="pi pi-refresh" class="p-button-text p-button-sm" (click)="load()"></button>
+  </div>
+
+  <ng-container *ngIf="summary as s">
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         SECCIÓN 1 — KPI Strip
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="kpi-strip">
+
+      <!-- Próximo corte -->
+      <div class="kpi-card kpi-authorized">
+        <div class="kpi-icon"><i class="pi pi-dollar"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-amount">{{ s.nextCutAmount | currency:'USD':'symbol':'1.0-0' }}</div>
+          <div class="kpi-label">Próximo corte</div>
+          <div class="kpi-sub">{{ s.nextCutCount }} registros autorizados</div>
+        </div>
+      </div>
+
+      <!-- Invoices ingested -->
+      <div class="kpi-card kpi-ingested">
+        <div class="kpi-icon"><i class="pi pi-file"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-amount">{{ s.ingestedInvoiceCount }}</div>
+          <div class="kpi-label">Invoices ingested</div>
+          <div class="kpi-sub">{{ s.ingestedAmount | currency:'USD':'symbol':'1.0-0' }} pendientes</div>
+        </div>
+      </div>
+
+      <!-- Pagado 6 meses -->
+      <div class="kpi-card kpi-paid">
+        <div class="kpi-icon"><i class="pi pi-chart-line"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-amount">{{ s.paid6MonthsTotal | currency:'USD':'symbol':'1.0-0' }}</div>
+          <div class="kpi-label">Pagado — 6 meses</div>
+          <div class="kpi-sub">Comisiones liquidadas</div>
+        </div>
+      </div>
+
+      <!-- Último corte -->
+      <div
+        class="kpi-card kpi-last-cut"
+        [class.kpi-has-failures]="s.lastCut.rejectedCount > 0"
+        [class.kpi-clickable]="s.lastCut.rejectedCount > 0"
+        (click)="scrollToFailures()"
+      >
+        <div class="kpi-icon">
+          <i [class]="s.lastCut.rejectedCount > 0 ? 'pi pi-exclamation-triangle' : 'pi pi-check-circle'"></i>
+        </div>
+        <div class="kpi-body">
+          <ng-container *ngIf="s.lastCut.processedAt; else noCut">
+            <div class="kpi-amount last-cut-counts">
+              <span class="ok">✓ {{ s.lastCut.paidCount }}</span>
+              <span *ngIf="s.lastCut.rejectedCount > 0" class="fail">✗ {{ s.lastCut.rejectedCount }}</span>
+            </div>
+            <div class="kpi-label">Último corte</div>
+            <div class="kpi-sub">
+              {{ s.lastCut.processedAt | date:'d MMM yyyy' }}
+              <span *ngIf="s.lastCut.rejectedCount > 0" class="see-failures"> · Ver fallas ↓</span>
+            </div>
+          </ng-container>
+          <ng-template #noCut>
+            <div class="kpi-amount">—</div>
+            <div class="kpi-label">Último corte</div>
+            <div class="kpi-sub">Sin cortes aún</div>
+          </ng-template>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         SECCIÓN 2 — Tendencia + Pipeline
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="two-col">
+
+      <!-- Tendencia 6 meses -->
+      <div class="panel trend-panel">
+        <h3 class="panel-title">
+          <i class="pi pi-chart-bar"></i>
+          Pagos entregados — últimos 6 meses
+        </h3>
+        <div class="trend-list">
+          <div *ngFor="let item of s.monthlyTrend" class="trend-row">
+            <span class="trend-month">{{ formatMonth(item.month) }}</span>
+            <div class="trend-bar-wrap">
+              <div
+                class="trend-bar"
+                [style.width.%]="trendBarWidth(item.paidAmount)"
+                [class.trend-bar-zero]="item.paidAmount === 0"
+              ></div>
+            </div>
+            <span class="trend-amount">{{ item.paidAmount | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pipeline actual -->
+      <div class="panel pipeline-panel">
+        <h3 class="panel-title">
+          <i class="pi pi-sitemap"></i>
+          Pipeline actual
+        </h3>
+        <div class="pipeline-list">
+
+          <div class="pipeline-row pipeline-ingested">
+            <div class="pipeline-dot"></div>
+            <div class="pipeline-info">
+              <span class="pipeline-status">Ingested</span>
+              <span class="pipeline-count">{{ s.pipeline.ingested.count }} facturas</span>
+            </div>
+            <span class="pipeline-amount">{{ s.pipeline.ingested.amount | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
+
+          <div class="pipeline-connector"></div>
+
+          <div class="pipeline-row pipeline-authorized">
+            <div class="pipeline-dot"></div>
+            <div class="pipeline-info">
+              <span class="pipeline-status">Autorizado</span>
+              <span class="pipeline-count">{{ s.pipeline.authorized.count }} registros</span>
+            </div>
+            <span class="pipeline-amount">{{ s.pipeline.authorized.amount | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
+
+          <div class="pipeline-connector"></div>
+
+          <div class="pipeline-row pipeline-sent">
+            <div class="pipeline-dot"></div>
+            <div class="pipeline-info">
+              <span class="pipeline-status">Enviado a QBO</span>
+              <span class="pipeline-count">{{ s.pipeline.paymentSent.count }} registros</span>
+            </div>
+            <span class="pipeline-amount">{{ s.pipeline.paymentSent.amount | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
+
+          <div class="pipeline-connector"></div>
+
+          <div class="pipeline-row pipeline-paid">
+            <div class="pipeline-dot"></div>
+            <div class="pipeline-info">
+              <span class="pipeline-status">Pagado (acumulado)</span>
+              <span class="pipeline-count">{{ s.pipeline.paid.count }} registros</span>
+            </div>
+            <span class="pipeline-amount">{{ s.pipeline.paid.amount | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
+
+        </div>
+        <div class="pipeline-in-flight">
+          <span>Total en vuelo</span>
+          <strong>{{ totalInFlight | currency:'USD':'symbol':'1.0-0' }}</strong>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         SECCIÓN 3 — Top beneficiarios
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="section-header">
+      <h3 class="section-title">
+        <i class="pi pi-star"></i>
+        Top beneficiarios
+      </h3>
+      <p-selectButton
+        [(ngModel)]="rankingMode"
+        [options]="rankingModeOptions"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="ranking-mode-toggle"
+      />
+    </div>
+
+    <div class="three-col">
+
+      <!-- Top Vendedores -->
+      <div class="panel ranking-panel">
+        <div class="ranking-header">
+          <p-tag value="Vendedores" severity="success" />
+          <i class="pi pi-user ranking-icon"></i>
+        </div>
+        <div class="ranking-list">
+          <div
+            *ngFor="let item of s.topSellers; let i = index"
+            class="ranking-row"
+            [class.hide-on-small]="i >= 3"
+          >
+            <span class="rank-pos" [class.rank-gold]="i===0" [class.rank-silver]="i===1" [class.rank-bronze]="i===2">
+              {{ i + 1 }}
+            </span>
+            <span class="rank-name" [pTooltip]="item.name" tooltipPosition="top">{{ item.name }}</span>
+            <span class="rank-amount">{{ rankingAmount(item) | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
+          <div *ngIf="!s.topSellers.length" class="ranking-empty">Sin datos</div>
+        </div>
+      </div>
+
+      <!-- Top Afiliados -->
+      <div class="panel ranking-panel">
+        <div class="ranking-header">
+          <p-tag value="Afiliados" severity="info" />
+          <i class="pi pi-users ranking-icon"></i>
+        </div>
+        <div class="ranking-list">
+          <div
+            *ngFor="let item of s.topAffiliates; let i = index"
+            class="ranking-row"
+            [class.hide-on-small]="i >= 3"
+          >
+            <span class="rank-pos" [class.rank-gold]="i===0" [class.rank-silver]="i===1" [class.rank-bronze]="i===2">
+              {{ i + 1 }}
+            </span>
+            <span class="rank-name" [pTooltip]="item.name" tooltipPosition="top">{{ item.name }}</span>
+            <span class="rank-amount">{{ rankingAmount(item) | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
+          <div *ngIf="!s.topAffiliates.length" class="ranking-empty">Sin datos</div>
+        </div>
+      </div>
+
+      <!-- Top Agencias -->
+      <div class="panel ranking-panel">
+        <div class="ranking-header">
+          <p-tag value="Agencias" severity="warn" />
+          <i class="pi pi-building ranking-icon"></i>
+        </div>
+        <div class="ranking-list">
+          <div
+            *ngFor="let item of s.topAgencies; let i = index"
+            class="ranking-row"
+            [class.hide-on-small]="i >= 3"
+          >
+            <span class="rank-pos" [class.rank-gold]="i===0" [class.rank-silver]="i===1" [class.rank-bronze]="i===2">
+              {{ i + 1 }}
+            </span>
+            <span class="rank-name" [pTooltip]="item.name" tooltipPosition="top">{{ item.name }}</span>
+            <span class="rank-amount">{{ rankingAmount(item) | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
+          <div *ngIf="!s.topAgencies.length" class="ranking-empty">Sin datos</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         SECCIÓN 4 — Productos y Clientes
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="two-col">
+
+      <!-- Top Productos -->
+      <div class="panel">
+        <h3 class="panel-title">
+          <i class="pi pi-box"></i>
+          Productos por comisión generada
+        </h3>
+        <div class="bar-rank-list">
+          <div *ngFor="let p of s.topProducts; let i = index" class="bar-rank-row">
+            <span class="bar-pos">{{ i + 1 }}</span>
+            <div class="bar-rank-info">
+              <div class="bar-rank-name">{{ p.productName }}</div>
+              <div class="bar-rank-bar-wrap">
+                <div class="bar-rank-bar bar-product" [style.width.%]="productBarWidth(p.totalAmount)"></div>
+              </div>
+            </div>
+            <div class="bar-rank-meta">
+              <span class="bar-rank-amount">{{ p.totalAmount | currency:'USD':'symbol':'1.0-0' }}</span>
+              <span class="bar-rank-count">{{ p.recordCount }} reg.</span>
+            </div>
+          </div>
+          <div *ngIf="!s.topProducts.length" class="ranking-empty">Sin datos</div>
+        </div>
+      </div>
+
+      <!-- Top Clientes -->
+      <div class="panel">
+        <h3 class="panel-title">
+          <i class="pi pi-id-card"></i>
+          Clientes que más generan comisión
+        </h3>
+        <div class="bar-rank-list">
+          <div *ngFor="let c of s.topClients; let i = index" class="bar-rank-row">
+            <span class="bar-pos">{{ i + 1 }}</span>
+            <div class="bar-rank-info">
+              <div class="bar-rank-name">{{ c.clientName }}</div>
+              <div class="bar-rank-bar-wrap">
+                <div class="bar-rank-bar bar-client" [style.width.%]="clientBarWidth(c.totalAmount)"></div>
+              </div>
+            </div>
+            <div class="bar-rank-meta">
+              <span class="bar-rank-amount">{{ c.totalAmount | currency:'USD':'symbol':'1.0-0' }}</span>
+              <span class="bar-rank-count">{{ c.recordCount }} reg.</span>
+            </div>
+          </div>
+          <div *ngIf="!s.topClients.length" class="ranking-empty">Sin datos</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         SECCIÓN 5 — Fallas del último corte (condicional)
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <div
+      *ngIf="s.lastCutFailures.length > 0"
+      class="panel failures-panel"
+      #failuresSection
+    >
+      <h3 class="panel-title failures-title">
+        <i class="pi pi-exclamation-triangle"></i>
+        Fallas del último corte
+        <p-tag [value]="s.lastCutFailures.length + ' sin pago'" severity="danger" />
+      </h3>
+      <p class="failures-subtitle">
+        Beneficiarios cuyo pago fue rechazado por QuickBooks. Corrija los datos bancarios en QBO y reintente desde
+        <a routerLink="/payments" class="failures-link">Seguimiento de Pagos</a>.
+      </p>
+      <div class="failures-list">
+        <div *ngFor="let f of s.lastCutFailures" class="failure-row">
+          <div class="failure-identity">
+            <p-tag [value]="typeLabel(f.beneficiaryType)" [severity]="typeSeverity(f.beneficiaryType)" />
+            <span class="failure-name">{{ f.beneficiaryName }}</span>
+          </div>
+          <span class="failure-amount">{{ f.amount | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span class="failure-reason" [pTooltip]="f.rejectionReason ?? ''" tooltipPosition="top">
+            {{ f.rejectionReason || 'Sin motivo registrado' }}
+          </span>
+          <a
+            routerLink="/payments"
+            pButton
+            icon="pi pi-arrow-right"
+            label="Ver pago"
+            class="p-button-text p-button-sm failure-action"
+          ></a>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
 </div>

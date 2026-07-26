@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -w \"\\\\n---STATUS:%{http_code}---\" -X GET \"http://localhost:3001/api/v1/commission-payments?coverageMonth=2026-05\")",
+      "Bash(curl -s -w \"\\\\n---STATUS:%{http_code}---\" -X POST \"http://localhost:3001/api/v1/auth/login\" -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"tito@alliantfed.us\\\\\",\\\\\"password\\\\\":\\\\\"admin123\\\\\"}\")",
+      "Bash(curl -s -w \"\\\\n---STATUS:%{http_code}---\" -X POST \"http://localhost:3001/api/v1/auth/login\" -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"tito@alliantfed.us\\\\\",\\\\\"password\\\\\":\\\\\"admin\\\\\"}\")",
+      "Bash(curl -s -w \"\\\\n---STATUS:%{http_code}---\" -X POST \"http://localhost:3001/api/v1/auth/login\" -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"tito@alliantfed.us\\\\\",\\\\\"password\\\\\":\\\\\"Admin1234\\\\\"}\")",
+      "Bash(DATABASE_URL=\"mysql://af_comUser:KKGPm58c20fqTf1P@127.0.0.1:3306/helix_comisiones?allowPublicKeyRetrieval=true\" npx prisma migrate resolve --applied 20260512234722_init)",
+      "Bash(DATABASE_URL=\"mysql://af_comUser:KKGPm58c20fqTf1P@127.0.0.1:3306/helix_comisiones?allowPublicKeyRetrieval=true\" npx prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --script)",
+      "Bash(DATABASE_URL=\"mysql://af_comUser:KKGPm58c20fqTf1P@127.0.0.1:3306/helix_comisiones?allowPublicKeyRetrieval=true\" npx prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --script)",
+      "Bash(DATABASE_URL=\"mysql://af_comUser:KKGPm58c20fqTf1P@127.0.0.1:3306/helix_comisiones?allowPublicKeyRetrieval=true\" npx prisma migrate resolve --applied 20260521000000_update_commission_schema)",
+      "Bash(DATABASE_URL=\"mysql://af_comUser:KKGPm58c20fqTf1P@127.0.0.1:3306/helix_comisiones?allowPublicKeyRetrieval=true\" npx prisma migrate status)"
+    ]
+  }
+}

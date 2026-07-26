@@ -1,0 +1,190 @@
+.ingestion-page {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 720px;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  .page-title {
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--p-primary-color, #0A2342);
+    }
+    .subtitle {
+      font-size: 0.875rem;
+      color: var(--p-text-muted-color, #6b7280);
+    }
+  }
+}
+
+// ── Trigger card ──────────────────────────────────────────────────────────────
+
+.trigger-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.trigger-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
+}
+
+.trigger-icon {
+  font-size: 2rem;
+  color: var(--p-primary-color, #0A2342);
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.trigger-desc {
+  margin: 0 0 0.25rem;
+  font-size: 0.9375rem;
+  color: var(--p-text-color);
+}
+
+.trigger-warning {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+// ── Error card ────────────────────────────────────────────────────────────────
+
+:host ::ng-deep .error-card .p-card {
+  border-left: 4px solid var(--p-red-500, #ef4444);
+}
+
+.error-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.error-icon {
+  font-size: 1.5rem;
+  color: var(--p-red-500, #ef4444);
+  flex-shrink: 0;
+}
+
+.error-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--p-red-700, #b91c1c);
+}
+
+.error-detail {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color, #6b7280);
+  font-family: monospace;
+}
+
+.error-body {
+  margin: 0 0 0.25rem;
+  font-size: 0.9375rem;
+  color: var(--p-text-color);
+  word-break: break-word;
+}
+
+.error-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+// ── Result card ───────────────────────────────────────────────────────────────
+
+:host ::ng-deep .result-card.result-card--warn .p-card {
+  border-left: 4px solid var(--p-orange-400, #fb923c);
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.result-status {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.result-icon {
+  font-size: 1.5rem;
+
+  &--ok   { color: var(--p-green-500, #22c55e); }
+  &--warn { color: var(--p-orange-500, #f97316); }
+}
+
+.result-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.result-time {
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+// ── Stats row ─────────────────────────────────────────────────────────────────
+
+.result-stats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stat-icon {
+  font-size: 1.25rem;
+
+  &.stat-blue  { color: var(--p-blue-500,   #3b82f6); }
+  &.stat-green { color: var(--p-green-500,  #22c55e); }
+  &.stat-red   { color: var(--p-red-500,    #ef4444); }
+  &.stat-muted { color: var(--p-text-muted-color, #9ca3af); }
+}
+
+.stat-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+
+  &--ok    { color: var(--p-green-600, #16a34a); }
+  &--error { color: var(--p-red-600,   #dc2626); }
+}

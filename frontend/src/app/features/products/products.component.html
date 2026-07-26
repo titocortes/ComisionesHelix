@@ -1,0 +1,392 @@
+<p-toast position="top-right" />
+<p-confirmpopup />
+
+<div class="products-page">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-title">
+      <h2>Configuración de Comisiones por Producto</h2>
+      <span class="subtitle">Gestiona tarifas mensuales y descuentos por dependiente</span>
+    </div>
+    <p-button
+      icon="pi pi-sync"
+      label="Sincronizar desde Helix"
+      [loading]="syncing"
+      (onClick)="syncFromHelix()"
+    />
+  </div>
+
+  <!-- ── Filter ──────────────────────────────────────────────────────────── -->
+  <div class="filter-bar">
+    <p-iconfield>
+      <p-inputicon class="pi pi-search" />
+      <input
+        pInputText
+        type="text"
+        [(ngModel)]="searchFilter"
+        placeholder="Buscar por nombre, clave o ID Helix..."
+        (input)="applyFilter()"
+        style="width: 300px"
+      />
+    </p-iconfield>
+  </div>
+
+  <!-- ── Products table ──────────────────────────────────────────────────── -->
+  <div class="table-wrapper">
+    <p-table
+      [value]="filteredProducts"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}–{last} de {totalRecords} productos"
+      class="p-datatable-sm p-datatable-gridlines"
+      sortField="productName"
+      [sortOrder]="1"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="productName">
+            Producto <p-sortIcon field="productName" />
+          </th>
+          <th pSortableColumn="shortName" style="width:80px">
+            Clave <p-sortIcon field="shortName" />
+          </th>
+          <th pSortableColumn="helixProductId" style="width:95px; text-align:center">
+            ID Helix <p-sortIcon field="helixProductId" />
+          </th>
+          <th style="width:120px; text-align:right">Vendedor/mes</th>
+          <th style="width:120px; text-align:right">Afiliado/mes</th>
+          <th style="width:120px; text-align:right">Agencia/mes</th>
+          <th style="width:80px; text-align:center">Estado</th>
+          <th style="width:155px; text-align:center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-p>
+        <tr>
+          <td>{{ p.productName }}</td>
+          <td style="font-family:monospace; font-size:0.8125rem">{{ p.shortName }}</td>
+          <td style="text-align:center; font-family:monospace; font-size:0.8125rem">
+            {{ p.helixProductId ?? '—' }}
+          </td>
+          <td style="text-align:right">
+            @if (p.commissionRate) {
+              {{ p.commissionRate.monthlySellerAmount | currency:'USD':'symbol':'1.2-2' }}
+            } @else {
+              <span class="no-rate">Sin tarifa</span>
+            }
+          </td>
+          <td style="text-align:right">
+            @if (p.commissionRate) {
+              {{ p.commissionRate.monthlyAffiliateAmount | currency:'USD':'symbol':'1.2-2' }}
+            } @else {
+              <span class="no-rate">—</span>
+            }
+          </td>
+          <td style="text-align:right">
+            @if (p.commissionRate) {
+              {{ p.commissionRate.monthlyAgencyAmount | currency:'USD':'symbol':'1.2-2' }}
+            } @else {
+              <span class="no-rate">—</span>
+            }
+          </td>
+          <td style="text-align:center">
+            <p-tag
+              [value]="p.active ? 'Activo' : 'Inactivo'"
+              [severity]="p.active ? 'success' : 'secondary'"
+            />
+          </td>
+          <td style="text-align:center">
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true" [rounded]="true" size="small"
+              title="Editar producto"
+              (onClick)="openEditProduct(p)"
+            />
+            <p-button
+              icon="pi pi-dollar"
+              [text]="true" [rounded]="true" size="small"
+              title="Tarifa de comisión"
+              [severity]="p.commissionRate ? 'success' : 'warn'"
+              (onClick)="openRateDialog(p)"
+            />
+            <p-button
+              icon="pi pi-users"
+              [text]="true" [rounded]="true" size="small"
+              title="Descuentos por dependientes"
+              severity="info"
+              (onClick)="openDiscountsDialog(p)"
+            />
+            <p-button
+              [icon]="p.active ? 'pi pi-ban' : 'pi pi-check-circle'"
+              [text]="true" [rounded]="true" size="small"
+              [title]="p.active ? 'Desactivar' : 'Activar'"
+              [severity]="p.active ? 'danger' : 'secondary'"
+              (onClick)="toggleActive(p)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="empty-message">
+            No hay productos configurados. Crea el primero con el botón "Nuevo Producto".
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+</div>
+
+<!-- ── Product edit dialog ────────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="productDialogVisible"
+  header="Editar Producto"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+  [closable]="!productSaving"
+>
+  <div class="form-body">
+    <div class="field">
+      <label class="field-label">Nombre del producto</label>
+      <input
+        pInputText
+        type="text"
+        [ngModel]="productForm.productName"
+        disabled
+        style="width: 100%; opacity: 0.7"
+      />
+      <span class="field-hint">El nombre se sincroniza automáticamente desde Helix.</span>
+    </div>
+    <div class="field">
+      <label class="field-label">Clave / nombre corto <span class="req">*</span></label>
+      <input
+        pInputText
+        type="text"
+        [(ngModel)]="productForm.shortName"
+        placeholder="Ej. PSB"
+        maxlength="20"
+        style="width: 100%"
+      />
+      <span class="field-hint">Máx. 20 caracteres. Se usa internamente para identificar el producto.</span>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="productDialogVisible = false"
+      [disabled]="productSaving"
+    />
+    <p-button
+      label="Guardar"
+      icon="pi pi-check"
+      (onClick)="saveProduct()"
+      [loading]="productSaving"
+      [disabled]="!productForm.shortName.trim() || productSaving"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Commission rate dialog ─────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="rateDialogVisible"
+  [header]="'Tarifa de Comisión — ' + (rateProduct?.productName ?? '')"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [draggable]="false"
+  [closable]="!rateSaving"
+>
+  <div class="form-body">
+    <p class="rate-hint">
+      Montos mensuales en USD que recibe cada beneficiario por pago de cobertura de un titular.
+      El monto proporcional se calcula automáticamente en ingesta según el período de cobertura.
+    </p>
+
+    <div class="field">
+      <label class="field-label">Comisión vendedor (USD/mes)</label>
+      <p-inputnumber
+        [(ngModel)]="rateForm.monthlySellerAmount"
+        mode="currency"
+        currency="USD"
+        locale="en-US"
+        [min]="0"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+    <div class="field">
+      <label class="field-label">Comisión afiliado (USD/mes)</label>
+      <p-inputnumber
+        [(ngModel)]="rateForm.monthlyAffiliateAmount"
+        mode="currency"
+        currency="USD"
+        locale="en-US"
+        [min]="0"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+    <div class="field">
+      <label class="field-label">Comisión agencia (USD/mes)</label>
+      <p-inputnumber
+        [(ngModel)]="rateForm.monthlyAgencyAmount"
+        mode="currency"
+        currency="USD"
+        locale="en-US"
+        [min]="0"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="rateDialogVisible = false"
+      [disabled]="rateSaving"
+    />
+    <p-button
+      label="Guardar tarifa"
+      icon="pi pi-check"
+      (onClick)="saveRate()"
+      [loading]="rateSaving"
+      [disabled]="rateSaving"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Dependent discounts dialog ─────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="discountsDialogVisible"
+  [header]="'Descuentos por Dependientes — ' + (discountsProduct?.productName ?? '')"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [draggable]="false"
+>
+  @if (discountsProduct) {
+    <div class="discounts-body">
+      <p class="rate-hint">
+        El porcentaje de descuento se aplica sobre el monto mensual de la tarifa base por cada
+        dependiente adicional del titular.
+      </p>
+
+      <!-- Existing discounts table -->
+      <p-table
+        [value]="discounts"
+        [loading]="discountsLoading"
+        class="p-datatable-sm p-datatable-gridlines"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width:140px"># Dependiente</th>
+            <th style="width:140px; text-align:right">% Descuento</th>
+            <th style="width:120px; text-align:center">O más</th>
+            <th style="width:90px; text-align:center">Acción</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-d>
+          <tr [class.editing-row]="editingDiscount?.idDependentDiscount === d.idDependentDiscount">
+            <td>Dep. #{{ d.dependentNumber }}</td>
+            <td style="text-align:right; font-variant-numeric:tabular-nums">
+              {{ d.discountPercentage | number:'1.0-2' }}%
+            </td>
+            <td style="text-align:center">
+              <i [class]="d.orMore ? 'pi pi-check text-green-600' : 'pi pi-times text-color-secondary'"></i>
+            </td>
+            <td style="text-align:center">
+              <p-button
+                icon="pi pi-pencil"
+                [text]="true" [rounded]="true" size="small"
+                (onClick)="startEditDiscount(d)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [text]="true" [rounded]="true" size="small"
+                severity="danger"
+                (onClick)="confirmDeleteDiscount(d, $event)"
+              />
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="4" class="empty-message">Sin descuentos configurados.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <p-divider />
+
+      <!-- Add / edit form -->
+      <div class="discount-form-title">
+        {{ editingDiscount ? 'Editar descuento' : 'Agregar descuento' }}
+      </div>
+      <div class="discount-form">
+        <div class="field">
+          <label class="field-label"># Dependiente</label>
+          <p-inputnumber
+            [(ngModel)]="discountForm.dependentNumber"
+            [min]="1"
+            [useGrouping]="false"
+            placeholder="Ej. 1"
+            [style]="{ width: '100%' }"
+          />
+        </div>
+        <div class="field">
+          <label class="field-label">% Descuento</label>
+          <p-inputnumber
+            [(ngModel)]="discountForm.discountPercentage"
+            suffix="%"
+            [min]="0"
+            [max]="100"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2"
+            placeholder="Ej. 50"
+            [style]="{ width: '100%' }"
+          />
+        </div>
+        <div class="field field-checkbox">
+          <label class="field-label">O más</label>
+          <p-checkbox [(ngModel)]="discountForm.orMore" [binary]="true" />
+        </div>
+        <div class="field field-actions">
+          @if (editingDiscount) {
+            <p-button
+              label="Cancelar"
+              severity="secondary"
+              [text]="true"
+              size="small"
+              (onClick)="cancelEditDiscount()"
+            />
+          }
+          <p-button
+            [label]="editingDiscount ? 'Actualizar' : 'Agregar'"
+            icon="pi pi-plus"
+            size="small"
+            (onClick)="saveDiscount()"
+            [loading]="discountSaving"
+            [disabled]="discountForm.dependentNumber === null || discountForm.discountPercentage === null || discountSaving"
+          />
+        </div>
+      </div>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cerrar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="discountsDialogVisible = false"
+    />
+  </ng-template>
+</p-dialog>

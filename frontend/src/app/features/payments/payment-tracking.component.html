@@ -1,0 +1,779 @@
+<p-toast position="top-right" />
+
+<div class="payments-page">
+
+  <!-- ── Page header ────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-title">
+      <h2>{{ 'payments.title' | translate }}</h2>
+      <span class="subtitle">{{ 'payments.subtitle' | translate }}</span>
+    </div>
+    <div class="header-controls">
+      <p-select
+        [options]="monthOptions"
+        [(ngModel)]="selectedMonth"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Todos los meses"
+        [showClear]="true"
+        (ngModelChange)="onMonthChange()"
+        styleClass="month-select"
+      >
+        <ng-template pTemplate="selectedItem" let-opt>
+          <span><i class="pi pi-calendar" style="margin-right:.5rem"></i>{{ opt?.label }}</span>
+        </ng-template>
+        <ng-template pTemplate="item" let-opt>
+          <div class="month-option-item">
+            <span>{{ opt.label }}</span>
+            @if (monthCounts.get(opt.value)) {
+              <span class="month-count-badge">{{ monthCounts.get(opt.value) }}</span>
+            }
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+  </div>
+
+  <!-- ── Status summary cards ────────────────────────────────────────────── -->
+  <div class="status-cards">
+
+    <div
+      class="status-card card-authorized"
+      [class.active]="statusFilter === 'authorized'"
+      (click)="setStatusFilter('authorized')"
+      [title]="'Filtrar por Autorizados'"
+    >
+      <div class="card-icon"><i class="pi pi-check-circle"></i></div>
+      <div class="card-body">
+        <div class="card-count">{{ stats.authorized.count }}</div>
+        <div class="card-label">Autorizados</div>
+        <div class="card-amount">{{ stats.authorized.total | currency:'USD':'symbol':'1.2-2' }}</div>
+      </div>
+    </div>
+
+    <div
+      class="status-card card-sent"
+      [class.active]="statusFilter === 'payment_sent'"
+      (click)="setStatusFilter('payment_sent')"
+      [title]="'Filtrar por Enviados a QBO'"
+    >
+      <div class="card-icon"><i class="pi pi-send"></i></div>
+      <div class="card-body">
+        <div class="card-count">{{ stats.paymentSent.count }}</div>
+        <div class="card-label">Enviados a QBO</div>
+        <div class="card-amount">{{ stats.paymentSent.total | currency:'USD':'symbol':'1.2-2' }}</div>
+      </div>
+    </div>
+
+    <div
+      class="status-card card-paid"
+      [class.active]="statusFilter === 'paid'"
+      (click)="setStatusFilter('paid')"
+      [title]="'Filtrar por Pagados'"
+    >
+      <div class="card-icon"><i class="pi pi-dollar"></i></div>
+      <div class="card-body">
+        <div class="card-count">{{ stats.paid.count }}</div>
+        <div class="card-label">Pagados</div>
+        <div class="card-amount">{{ stats.paid.total | currency:'USD':'symbol':'1.2-2' }}</div>
+      </div>
+    </div>
+
+    <div
+      class="status-card card-rejected"
+      [class.active]="statusFilter === 'rejected'"
+      (click)="setStatusFilter('rejected')"
+      [title]="'Filtrar por Rechazados'"
+    >
+      <div class="card-icon"><i class="pi pi-exclamation-triangle"></i></div>
+      <div class="card-body">
+        <div class="card-count">{{ stats.rejected.count }}</div>
+        <div class="card-label">Rechazados</div>
+        <div class="card-amount">{{ stats.rejected.total | currency:'USD':'symbol':'1.2-2' }}</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Top 3 panels ─────────────────────────────────────────────────────── -->
+  @if (!loading && allRecords.length > 0) {
+    <div class="top3-panels">
+
+      <div class="top3-panel">
+        <div class="top3-header">
+          <i class="pi pi-building"></i>
+          <span>Top Agencias</span>
+          <span class="top3-period">{{ selectedMonth ?? 'Todos los periodos' }}</span>
+        </div>
+        @for (item of top3Agencies; track item.name; let i = $index) {
+          <div class="top3-row">
+            <span class="top3-rank">{{ i + 1 }}</span>
+            <span class="top3-name">{{ item.name }}</span>
+            <span class="top3-amount">{{ item.total | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+        }
+        @if (top3Agencies.length === 0) {
+          <div class="top3-empty">Sin datos</div>
+        }
+      </div>
+
+      <div class="top3-panel">
+        <div class="top3-header">
+          <i class="pi pi-users"></i>
+          <span>Top Afiliados</span>
+          <span class="top3-period">{{ selectedMonth ?? 'Todos los periodos' }}</span>
+        </div>
+        @for (item of top3Affiliates; track item.name; let i = $index) {
+          <div class="top3-row">
+            <span class="top3-rank">{{ i + 1 }}</span>
+            <span class="top3-name">{{ item.name }}</span>
+            <span class="top3-amount">{{ item.total | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+        }
+        @if (top3Affiliates.length === 0) {
+          <div class="top3-empty">Sin datos</div>
+        }
+      </div>
+
+    </div>
+  }
+
+  <!-- ── Tabs ───────────────────────────────────────────────────────────── -->
+  <p-tabs [value]="activeTab" (valueChange)="onTabChange($event)">
+    <p-tablist>
+      <p-tab value="0">
+        <i class="pi pi-file-edit" style="margin-right:.4rem"></i>
+        Por Invoice
+      </p-tab>
+      <p-tab value="1">
+        <i class="pi pi-users" style="margin-right:.4rem"></i>
+        Por Beneficiario
+      </p-tab>
+      <p-tab value="2">
+        <i class="pi pi-history" style="margin-right:.4rem"></i>
+        Batches de Pago
+      </p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- Tab 1 — Por Invoice                                               -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <p-tabpanel value="0">
+
+        <!-- Filter bar -->
+        <div class="filter-bar">
+          <p-iconfield>
+            <p-inputicon class="pi pi-user" />
+            <input
+              pInputText
+              type="text"
+              [(ngModel)]="beneficiaryFilter"
+              placeholder="Buscar por vendedor, afiliado o agencia..."
+              (keyup.enter)="onSearchKeyEnter()"
+            />
+          </p-iconfield>
+
+          <p-selectbutton
+            [options]="statusOptions"
+            [(ngModel)]="statusFilter"
+            optionLabel="label"
+            optionValue="value"
+            (ngModelChange)="applyFilters()"
+          />
+
+          <p-button
+            icon="pi pi-search"
+            label="Buscar"
+            (onClick)="loadRecords()"
+          />
+          <p-button
+            icon="pi pi-times"
+            severity="secondary"
+            [text]="true"
+            title="Limpiar filtros"
+            (onClick)="clearFilters()"
+          />
+        </div>
+
+        <!-- Records table -->
+        <div class="table-wrapper">
+          <p-table
+            [value]="filteredRecords"
+            [loading]="loading"
+            [paginator]="true"
+            [rows]="25"
+            [rowsPerPageOptions]="[25, 50, 100]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} registros"
+            class="p-datatable-sm p-datatable-gridlines"
+            [tableStyle]="{ 'min-width': '62rem' }"
+            sortField="coverageStartDate"
+            [sortOrder]="-1"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="helixPaymentId" style="width:100px">
+                  ID Helix <p-sortIcon field="helixPaymentId" />
+                </th>
+                <th pSortableColumn="status" style="width:140px">
+                  Estado <p-sortIcon field="status" />
+                </th>
+                <th pSortableColumn="coverageStartDate" style="width:105px">
+                  Cobertura <p-sortIcon field="coverageStartDate" />
+                </th>
+                <th pSortableColumn="clientName" style="min-width:150px">
+                  Cliente <p-sortIcon field="clientName" />
+                </th>
+                <th pSortableColumn="productName" style="min-width:150px">
+                  Producto <p-sortIcon field="productName" />
+                </th>
+                <th pSortableColumn="sellerName" style="min-width:130px">
+                  Vendedor <p-sortIcon field="sellerName" />
+                </th>
+                <th pSortableColumn="totalAmount" style="width:120px; text-align:right">
+                  Comisión <p-sortIcon field="totalAmount" />
+                </th>
+                <th style="width:80px; text-align:center">Acción</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-r>
+              <tr class="clickable-row" (click)="openDetail(r)">
+                <td class="mono-cell">{{ r.helixPaymentId }}</td>
+                <td>
+                  <p-tag
+                    [value]="getStatusLabel(r.status)"
+                    [severity]="getStatusSeverity(r.status)"
+                  />
+                </td>
+                <td>{{ r.coverageStartDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ r.clientName  || '—' }}</td>
+                <td>{{ r.productName || '—' }}</td>
+                <td>{{ r.sellerName  || '—' }}</td>
+                <td class="amount-cell">
+                  {{ r.totalAmount | currency:'USD':'symbol':'1.2-2' }}
+                </td>
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  @if (r.status === 'rejected') {
+                    <p-button
+                      icon="pi pi-refresh"
+                      severity="warn"
+                      [text]="true"
+                      [rounded]="true"
+                      size="small"
+                      title="Reintentar pago"
+                      (onClick)="openRetry(r, $event)"
+                    />
+                  }
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="8" class="empty-message">
+                  @if (loading) {
+                    Cargando registros...
+                  } @else {
+                    No hay registros de pago para el filtro seleccionado.
+                  }
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      </p-tabpanel>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- Tab 2 — Por Beneficiario                                          -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <p-tabpanel value="1">
+
+        <div class="beneficiary-toolbar">
+          <p-selectbutton
+            [options]="typeOptions"
+            [(ngModel)]="beneficiaryTypeFilter"
+            optionLabel="label"
+            optionValue="value"
+            (ngModelChange)="onBeneficiaryTypeChange()"
+          />
+          <span class="beneficiary-count">
+            {{ filteredBeneficiaries.length }} beneficiario{{ filteredBeneficiaries.length !== 1 ? 's' : '' }}
+          </span>
+          <p-button
+            icon="pi pi-refresh"
+            severity="secondary"
+            [text]="true"
+            size="small"
+            title="Recargar"
+            (onClick)="loadBeneficiarySummary()"
+          />
+        </div>
+
+        <div class="table-wrapper">
+          <p-table
+            [value]="filteredBeneficiaries"
+            [loading]="loadingBeneficiaries"
+            [paginator]="true"
+            [rows]="25"
+            [rowsPerPageOptions]="[25, 50, 100]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} registros"
+            class="p-datatable-sm p-datatable-gridlines"
+            [tableStyle]="{ 'min-width': '54rem' }"
+            sortField="totalPaid"
+            [sortOrder]="-1"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="name" style="min-width:180px">
+                  Beneficiario <p-sortIcon field="name" />
+                </th>
+                <th style="width:110px">Tipo</th>
+                <th pSortableColumn="invoiceCount" style="width:90px; text-align:right">
+                  Invoices <p-sortIcon field="invoiceCount" />
+                </th>
+                <th pSortableColumn="totalAuthorized" style="width:130px; text-align:right">
+                  Autorizado <p-sortIcon field="totalAuthorized" />
+                </th>
+                <th pSortableColumn="totalPaymentSent" style="width:130px; text-align:right">
+                  Env. a QBO <p-sortIcon field="totalPaymentSent" />
+                </th>
+                <th pSortableColumn="totalPaid" style="width:130px; text-align:right">
+                  Pagado <p-sortIcon field="totalPaid" />
+                </th>
+                <th pSortableColumn="totalRejected" style="width:120px; text-align:right">
+                  Rechazado <p-sortIcon field="totalRejected" />
+                </th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-b>
+              <tr>
+                <td><strong>{{ b.name }}</strong></td>
+                <td>
+                  <p-tag
+                    [value]="getTypeLabel(b.type)"
+                    [severity]="getTypeSeverity(b.type)"
+                  />
+                </td>
+                <td class="amount-cell">{{ b.invoiceCount }}</td>
+                <td class="amount-cell">
+                  @if (b.totalAuthorized > 0) {
+                    <span class="amount-badge amount-authorized">
+                      {{ b.totalAuthorized | currency:'USD':'symbol':'1.2-2' }}
+                    </span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td class="amount-cell">
+                  @if (b.totalPaymentSent > 0) {
+                    <span class="amount-badge amount-sent">
+                      {{ b.totalPaymentSent | currency:'USD':'symbol':'1.2-2' }}
+                    </span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td class="amount-cell">
+                  @if (b.totalPaid > 0) {
+                    <span class="amount-badge amount-paid">
+                      {{ b.totalPaid | currency:'USD':'symbol':'1.2-2' }}
+                    </span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td class="amount-cell">
+                  @if (b.totalRejected > 0) {
+                    <span class="amount-badge amount-rejected">
+                      {{ b.totalRejected | currency:'USD':'symbol':'1.2-2' }}
+                    </span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="7" class="empty-message">
+                  No hay beneficiarios con comisiones en proceso para el mes seleccionado.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      </p-tabpanel>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- Tab 3 — Batches de Pago                                           -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <p-tabpanel value="2">
+
+        <div class="batch-toolbar">
+          <p-select
+            [options]="batchMonthOptions"
+            [(ngModel)]="batchMonth"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los meses"
+            [showClear]="true"
+            (ngModelChange)="onBatchMonthChange()"
+            styleClass="month-select"
+          >
+            <ng-template pTemplate="selectedItem" let-opt>
+              <span><i class="pi pi-calendar" style="margin-right:.5rem"></i>{{ opt?.label }}</span>
+            </ng-template>
+          </p-select>
+          <span class="batch-count">{{ batches.length }} batch{{ batches.length !== 1 ? 'es' : '' }}</span>
+          <p-button
+            icon="pi pi-refresh"
+            severity="secondary"
+            [text]="true"
+            size="small"
+            title="Recargar"
+            (onClick)="loadBatches()"
+          />
+        </div>
+
+        <div class="table-wrapper">
+          <p-table
+            [value]="batches"
+            [loading]="loadingBatches"
+            dataKey="idPaymentBatch"
+            [expandedRowKeys]="{}"
+            class="p-datatable-sm p-datatable-gridlines"
+            [tableStyle]="{ 'min-width': '50rem' }"
+            sortField="processedAt"
+            [sortOrder]="-1"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width:3rem"></th>
+                <th pSortableColumn="idPaymentBatch" style="width:80px">
+                  # Batch <p-sortIcon field="idPaymentBatch" />
+                </th>
+                <th pSortableColumn="processedAt" style="width:160px">
+                  Fecha <p-sortIcon field="processedAt" />
+                </th>
+                <th pSortableColumn="status" style="width:130px">
+                  Estado <p-sortIcon field="status" />
+                </th>
+                <th style="width:100px; text-align:right">Beneficiarios</th>
+                <th pSortableColumn="totalAmount" style="width:150px; text-align:right">
+                  Total <p-sortIcon field="totalAmount" />
+                </th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-batch let-expanded="expanded">
+              <tr>
+                <td>
+                  <p-button
+                    [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                    severity="secondary"
+                    [text]="true"
+                    [rounded]="true"
+                    size="small"
+                    [pRowToggler]="batch"
+                  />
+                </td>
+                <td class="mono-cell"># {{ batch.idPaymentBatch }}</td>
+                <td>{{ batch.processedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  <p-tag
+                    [value]="getBatchStatusLabel(batch.status)"
+                    [severity]="getBatchStatusSeverity(batch.status)"
+                  />
+                </td>
+                <td class="amount-cell">{{ batchBeneficiaryCount(batch) }}</td>
+                <td class="amount-cell total-amount">
+                  {{ batch.totalAmount | currency:'USD':'symbol':'1.2-2' }}
+                </td>
+              </tr>
+            </ng-template>
+
+            <!-- Expandable row: batch items -->
+            <ng-template pTemplate="rowexpansion" let-batch>
+              <tr>
+                <td colspan="6" class="batch-expansion">
+                  <div class="batch-items-header">
+                    Detalle de pagos por beneficiario — Batch #{{ batch.idPaymentBatch }}
+                  </div>
+                  <p-table
+                    [value]="batch.batchItems"
+                    class="p-datatable-sm p-datatable-striped"
+                    [tableStyle]="{ 'min-width': '40rem' }"
+                  >
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th style="min-width:160px">Beneficiario</th>
+                        <th style="width:100px">Tipo</th>
+                        <th style="width:100px; text-align:right">Invoices</th>
+                        <th style="width:130px; text-align:right">Monto</th>
+                        <th style="width:130px">Estado QBO</th>
+                        <th style="min-width:140px">ID Pago QBO</th>
+                        <th style="width:120px">Fecha Pago</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-item>
+                      <tr>
+                        <td><strong>{{ item.beneficiaryName }}</strong></td>
+                        <td>
+                          <p-tag
+                            [value]="getTypeLabel(item.beneficiaryType)"
+                            [severity]="getTypeSeverity(item.beneficiaryType)"
+                          />
+                        </td>
+                        <td class="amount-cell">{{ item.commissionCount }}</td>
+                        <td class="amount-cell">
+                          {{ item.totalAmount | currency:'USD':'symbol':'1.2-2' }}
+                        </td>
+                        <td>
+                          <p-tag
+                            [value]="getItemStatusLabel(item.status)"
+                            [severity]="getItemStatusSeverity(item.status)"
+                          />
+                        </td>
+                        <td class="mono-cell small-text">
+                          {{ item.qboBillPaymentId || '—' }}
+                        </td>
+                        <td>
+                          {{ item.paidAt ? (item.paidAt | date:'dd/MM/yyyy') : '—' }}
+                        </td>
+                      </tr>
+                    </ng-template>
+                    @if (batch.batchItems.length === 0) {
+                      <ng-template pTemplate="emptymessage">
+                        <tr>
+                          <td colspan="7" class="empty-message">Sin ítems en este batch.</td>
+                        </tr>
+                      </ng-template>
+                    }
+                  </p-table>
+
+                  @for (item of batch.batchItems; track item.idPaymentBatchItem) {
+                    @if (item.rejectionReason) {
+                      <div class="rejection-notice">
+                        <i class="pi pi-exclamation-triangle"></i>
+                        <strong>{{ item.beneficiaryName }}:</strong> {{ item.rejectionReason }}
+                      </div>
+                    }
+                  }
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="empty-message">
+                  No hay batches de pago para el mes seleccionado.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      </p-tabpanel>
+
+    </p-tabpanels>
+  </p-tabs>
+
+</div>
+
+<!-- ── Invoice detail dialog ─────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="detailVisible"
+  [header]="'Invoice #' + (selectedRecord?.helixPaymentId ?? '')"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [draggable]="false"
+  [closable]="true"
+>
+  @if (selectedRecord) {
+    <div class="detail-body">
+
+      <!-- Status banner for rejected records -->
+      @if (selectedRecord.status === 'rejected') {
+        <div class="rejection-banner">
+          <i class="pi pi-exclamation-triangle"></i>
+          <div>
+            <strong>Pago rechazado por QuickBooks</strong>
+            <p>{{ selectedRecord.rejectionReason }}</p>
+          </div>
+        </div>
+      }
+
+      <!-- Identification -->
+      <section class="detail-section">
+        <h4 class="section-title">Identificación</h4>
+        <div class="detail-grid">
+          <span class="dl">Cliente</span>
+          <span class="dv">{{ selectedRecord.clientName || '—' }}</span>
+          <span class="dl">Producto</span>
+          <span class="dv">{{ selectedRecord.productName || '—' }}</span>
+          <span class="dl">Vendedor</span>
+          <span class="dv">{{ selectedRecord.sellerName || '—' }}</span>
+          <span class="dl">Afiliado</span>
+          <span class="dv">{{ selectedRecord.affiliateName || '—' }}</span>
+          <span class="dl">Agencia</span>
+          <span class="dv">{{ selectedRecord.agencyName || '—' }}</span>
+        </div>
+      </section>
+
+      <p-divider />
+
+      <!-- Coverage & payment dates -->
+      <section class="detail-section">
+        <h4 class="section-title">Cobertura y Pago</h4>
+        <div class="detail-grid">
+          <span class="dl">Inicio cobertura</span>
+          <span class="dv">{{ selectedRecord.coverageStartDate | date:'dd/MM/yyyy' }}</span>
+          <span class="dl">Fin cobertura</span>
+          <span class="dv">{{ selectedRecord.coverageEndDate | date:'dd/MM/yyyy' }}</span>
+          <span class="dl">Fecha autorización</span>
+          <span class="dv">{{ selectedRecord.authorizationDate | date:'dd/MM/yyyy' }}</span>
+          @if (selectedRecord.paymentBatch) {
+            <span class="dl">Batch de pago</span>
+            <span class="dv">
+              #{{ selectedRecord.paymentBatch.idPaymentBatch }}
+              — {{ selectedRecord.paymentBatch.processedAt | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+          }
+          @if (selectedRecord.qboBillPaymentId) {
+            <span class="dl">ID QBO</span>
+            <span class="dv mono-text">{{ selectedRecord.qboBillPaymentId }}</span>
+          }
+          @if (selectedRecord.qboPaidAt) {
+            <span class="dl">Fecha pago QBO</span>
+            <span class="dv">{{ selectedRecord.qboPaidAt | date:'dd/MM/yyyy' }}</span>
+          }
+        </div>
+      </section>
+
+      <p-divider />
+
+      <!-- Commission breakdown -->
+      <section class="detail-section">
+        <h4 class="section-title">Desglose de Comisión</h4>
+        <div class="detail-grid detail-grid--money">
+          <span class="dl">Monto invoice</span>
+          <span class="dv money">{{ selectedRecord.invoiceAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span class="dl">Comisión vendedor</span>
+          <span class="dv money">{{ selectedRecord.sellerAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span class="dl">Comisión afiliado</span>
+          <span class="dv money">{{ selectedRecord.affiliateAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span class="dl">Comisión agencia</span>
+          <span class="dv money">{{ selectedRecord.agencyAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span class="dl total-label">Total comisión</span>
+          <span class="dv money total-value">{{ selectedRecord.totalAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
+      </section>
+
+      <!-- State history -->
+      @if (selectedRecord.stateHistory.length) {
+        <p-divider />
+        <section class="detail-section">
+          <h4 class="section-title">Historial de Estados</h4>
+          <div class="state-history">
+            @for (entry of selectedRecord.stateHistory; track entry.idStateHistory) {
+              <div class="history-entry">
+                <div class="history-dot">
+                  <span class="dot" [class]="'dot-' + entry.toStatus"></span>
+                  @if (!$last) { <span class="dot-line"></span> }
+                </div>
+                <div class="history-content">
+                  <div class="history-transition">
+                    <p-tag [value]="getStatusLabel(entry.fromStatus)" [severity]="getStatusSeverity(entry.fromStatus)" />
+                    <i class="pi pi-arrow-right history-arrow"></i>
+                    <p-tag [value]="getStatusLabel(entry.toStatus)" [severity]="getStatusSeverity(entry.toStatus)" />
+                  </div>
+                  <div class="history-meta">
+                    <span class="history-date">{{ entry.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                    @if (entry.notes) {
+                      <span class="history-notes">{{ entry.notes }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cerrar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="detailVisible = false"
+    />
+    @if (selectedRecord?.status === 'rejected') {
+      <p-button
+        icon="pi pi-refresh"
+        label="Reintentar pago"
+        severity="warn"
+        [outlined]="true"
+        (onClick)="openRetry(selectedRecord!, $event); detailVisible = false"
+      />
+    }
+  </ng-template>
+</p-dialog>
+
+<!-- ── Retry confirmation dialog ─────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="retryVisible"
+  header="Reintentar Pago"
+  [modal]="true"
+  [style]="{ width: '440px' }"
+  [draggable]="false"
+  [closable]="!retrying"
+>
+  @if (retryRecord) {
+    <div class="retry-body">
+      <p>¿Deseas reenviar el pago a QuickBooks para el siguiente registro?</p>
+      <div class="retry-summary">
+        <div><strong>Cliente:</strong> {{ retryRecord.clientName || '—' }}</div>
+        <div><strong>Producto:</strong> {{ retryRecord.productName || '—' }}</div>
+        <div><strong>Vendedor:</strong> {{ retryRecord.sellerName || '—' }}</div>
+        <div><strong>Total comisión:</strong> {{ retryRecord.totalAmount | currency:'USD':'symbol':'1.2-2' }}</div>
+        @if (retryRecord.rejectionReason) {
+          <div class="retry-rejection">
+            <strong>Rechazo previo:</strong> {{ retryRecord.rejectionReason }}
+          </div>
+        }
+      </div>
+      <p class="retry-hint">
+        Asegúrate de que el beneficiario haya actualizado sus datos bancarios en QuickBooks antes de continuar.
+      </p>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="retryVisible = false"
+      [disabled]="retrying"
+    />
+    <p-button
+      icon="pi pi-refresh"
+      label="Reenviar a QuickBooks"
+      severity="warn"
+      (onClick)="confirmRetry()"
+      [loading]="retrying"
+      [disabled]="retrying"
+    />
+  </ng-template>
+</p-dialog>
